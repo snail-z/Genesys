@@ -1,30 +1,9 @@
 import UIKit
 
-// MARK: - 数据模型
-struct CalendarDay {
-    let date: Date
-    let solarDay: Int
-    let lunarDay: String
-    let lunarMonth: String
-    let festival: String?
-    let solarTerm: String?
-    let isToday: Bool
-    let isCurrentMonth: Bool
-    let isSelected: Bool
-}
-
-struct DayDetail {
-    let lunarDate: String
-    let zodiac: String
-    let ganZhi: String
-    let suitable: [String]
-    let avoid: [String]
-    let festival: String?
-    let solarTerm: String?
-    let motivation: String
-}
-
 class CalendarViewController: UIViewController {
+    
+    // MARK: - 数据管理器
+    private let dataManager = CalendarDataManager.shared
     
     // MARK: - UI Components
     private var scrollView: UIScrollView!
@@ -42,8 +21,7 @@ class CalendarViewController: UIViewController {
     private var weekLabels: [UILabel] = []
     
     // 日历网格
-    private var calendarGridView: UIView!
-    private var dayButtons: [UIButton] = []
+    private var calendarGridView: CalendarGridView!
     
     // 底部详情卡片
     private var detailCardView: UIView!
@@ -56,14 +34,13 @@ class CalendarViewController: UIViewController {
     // MARK: - 数据
     private var currentDate = Date()
     private var selectedDate = Date()
-    private var calendarDays: [CalendarDay] = []
     
     // MARK: - 生命周期
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupNavigationBar()
-        updateCalendar()
+        updateDetailCard()
     }
     
     private func setupNavigationBar() {
@@ -205,8 +182,9 @@ class CalendarViewController: UIViewController {
     }
     
     private func setupCalendarGridView() {
-        calendarGridView = UIView()
+        calendarGridView = CalendarGridView()
         calendarGridView.translatesAutoresizingMaskIntoConstraints = false
+        calendarGridView.delegate = self
         
         contentView.addSubview(calendarGridView)
         
@@ -334,171 +312,14 @@ class CalendarViewController: UIViewController {
     }
     
     // MARK: - 更新日历
-    private func updateCalendar() {
-        // 更新年月标题
+    private func updateYearMonthLabel() {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy年 MM月"
         yearMonthLabel.text = formatter.string(from: currentDate)
-        
-        // 生成日历数据
-        generateCalendarDays()
-        
-        // 更新日历网格
-        updateCalendarGrid()
-        
-        // 更新详情卡片
-        updateDetailCard()
-    }
-    
-    private func generateCalendarDays() {
-        calendarDays.removeAll()
-        
-        let calendar = Calendar.current
-        let today = Date()
-        
-        // 获取当月第一天
-        let firstDayOfMonth = calendar.dateInterval(of: .month, for: currentDate)!.start
-        let firstWeekday = calendar.component(.weekday, from: firstDayOfMonth)
-        
-        // 计算需要显示的天数 (6周 = 42天)
-        let totalDays = 42
-        
-        // 计算起始日期
-        let startDate = calendar.date(byAdding: .day, value: -(firstWeekday - 1), to: firstDayOfMonth)!
-        
-        for i in 0..<totalDays {
-            let date = calendar.date(byAdding: .day, value: i, to: startDate)!
-            let day = calendar.component(.day, from: date)
-            
-            let isCurrentMonth = calendar.isDate(date, equalTo: currentDate, toGranularity: .month)
-            let isToday = calendar.isDateInToday(date)
-            let isSelected = calendar.isDate(date, inSameDayAs: selectedDate)
-            
-            // 生成农历和节气信息
-            let lunarInfo = generateLunarInfo(for: date)
-            
-            let calendarDay = CalendarDay(
-                date: date,
-                solarDay: day,
-                lunarDay: lunarInfo.lunarDay,
-                lunarMonth: lunarInfo.lunarMonth,
-                festival: lunarInfo.festival,
-                solarTerm: lunarInfo.solarTerm,
-                isToday: isToday,
-                isCurrentMonth: isCurrentMonth,
-                isSelected: isSelected
-            )
-            
-            calendarDays.append(calendarDay)
-        }
-    }
-    
-    private func generateLunarInfo(for date: Date) -> (lunarDay: String, lunarMonth: String, festival: String?, solarTerm: String?) {
-        let calendar = Calendar.current
-        let day = calendar.component(.day, from: date)
-        let month = calendar.component(.month, from: date)
-        
-        // 简化的农历计算（实际应用中需要使用专业农历库）
-        let lunarDays = ["初一", "初二", "初三", "初四", "初五", "初六", "初七", "初八", "初九", "初十",
-                        "十一", "十二", "十三", "十四", "十五", "十六", "十七", "十八", "十九", "二十",
-                        "廿一", "廿二", "廿三", "廿四", "廿五", "廿六", "廿七", "廿八", "廿九", "三十"]
-        
-        let lunarDay = lunarDays[(day - 1) % 30]
-        let lunarMonth = "\(month)月"
-        
-        // 节日判断
-        var festival: String? = nil
-        var solarTerm: String? = nil
-        
-        if month == 11 {
-            if day == 7 { solarTerm = "立冬" }
-            else if day == 22 { solarTerm = "小雪" }
-            else if day == 27 { festival = "感恩节" }
-        }
-        
-        if month == 1 && day == 1 { festival = "元旦" }
-        if month == 12 && day == 25 { festival = "圣诞节" }
-        
-        return (lunarDay, lunarMonth, festival, solarTerm)
-    }
-    
-    private func updateCalendarGrid() {
-        // 清空之前的按钮
-        dayButtons.forEach { $0.removeFromSuperview() }
-        dayButtons.removeAll()
-        
-        let screenWidth = UIScreen.main.bounds.width
-        let buttonWidth = screenWidth / 7
-        let buttonHeight: CGFloat = 50
-        
-        for (index, calendarDay) in calendarDays.enumerated() {
-            let row = index / 7
-            let col = index % 7
-            
-            let button = UIButton(type: .custom)
-            button.frame = CGRect(
-                x: CGFloat(col) * buttonWidth,
-                y: CGFloat(row) * buttonHeight,
-                width: buttonWidth,
-                height: buttonHeight
-            )
-            
-            // 主数字
-            let solarDayText = "\(calendarDay.solarDay)"
-            let lunarText = calendarDay.solarTerm ?? calendarDay.lunarDay
-            
-            let attributedString = NSMutableAttributedString()
-            
-            // 阳历日期
-            let solarAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.boldSystemFont(ofSize: 18),
-                .foregroundColor: calendarDay.isCurrentMonth ? UIColor.label : UIColor.tertiaryLabel
-            ]
-            attributedString.append(NSAttributedString(string: solarDayText, attributes: solarAttributes))
-            
-            // 换行
-            attributedString.append(NSAttributedString(string: "\n"))
-            
-            // 农历/节气
-            let lunarAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 10),
-                .foregroundColor: calendarDay.isCurrentMonth ? UIColor.secondaryLabel : UIColor.quaternaryLabel
-            ]
-            attributedString.append(NSAttributedString(string: lunarText, attributes: lunarAttributes))
-            
-            button.setAttributedTitle(attributedString, for: .normal)
-            button.titleLabel?.numberOfLines = 2
-            button.titleLabel?.textAlignment = .center
-            
-            // 今天标记
-            if calendarDay.isToday {
-                button.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.2)
-                button.layer.cornerRadius = 8
-            }
-            
-            // 选中标记
-            if calendarDay.isSelected {
-                button.layer.borderWidth = 2
-                button.layer.borderColor = UIColor.systemBlue.cgColor
-                button.layer.cornerRadius = 8
-            }
-            
-            // 节日标记
-            if let festival = calendarDay.festival {
-                button.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
-                button.layer.cornerRadius = 8
-            }
-            
-            button.tag = index
-            button.addTarget(self, action: #selector(dayButtonTapped(_:)), for: .touchUpInside)
-            
-            calendarGridView.addSubview(button)
-            dayButtons.append(button)
-        }
     }
     
     private func updateDetailCard() {
-        let dayDetail = generateDayDetail(for: selectedDate)
+        let dayDetail = dataManager.generateDayDetail(for: selectedDate)
         
         lunarInfoLabel.text = "\(dayDetail.lunarDate) \(dayDetail.zodiac) \(dayDetail.ganZhi)"
         suitableLabel.text = dayDetail.suitable.joined(separator: " ")
@@ -506,66 +327,31 @@ class CalendarViewController: UIViewController {
         motivationLabel.text = dayDetail.motivation
     }
     
-    private func generateDayDetail(for date: Date) -> DayDetail {
-        let calendar = Calendar.current
-        let day = calendar.component(.day, from: date)
-        let month = calendar.component(.month, from: date)
-        
-        let zodiacs = ["鼠", "牛", "虎", "兔", "龙", "蛇", "马", "羊", "猴", "鸡", "狗", "猪"]
-        let zodiac = zodiacs[year(from: date) % 12] + "年"
-        
-        let motivations = [
-            "每一天的努力，以后只有幸福的未来。",
-            "坚持的昨天叫立足，坚持的今天叫进取，坚持的明天叫成功。",
-            "努力是为了更好的选择，或者是为了自己能自由选择。",
-            "不是每个人都能成为自己想要的样子，但每个人都可以努力成为自己想要的样子。",
-            "生活总是让我们遍体鳞伤，但到后来，那些受伤的地方一定会变成我们最强壮的地方。"
-        ]
-        
-        return DayDetail(
-            lunarDate: "九月十二",
-            zodiac: zodiac,
-            ganZhi: "乙巳年",
-            suitable: ["祭祀", "造车器", "出行", "修造", "上梁", "造屋", "安门", "安床", "造"],
-            avoid: ["出货财", "开仓", "动土", "破土", "安葬", "行丧", "伐木", "开渠"],
-            festival: nil,
-            solarTerm: nil,
-            motivation: motivations[day % motivations.count]
-        )
-    }
-    
-    private func year(from date: Date) -> Int {
-        return Calendar.current.component(.year, from: date)
-    }
-    
     // MARK: - 事件处理
     @objc private func prevMonthTapped() {
-        currentDate = Calendar.current.date(byAdding: .month, value: -1, to: currentDate) ?? currentDate
-        updateCalendar()
+        calendarGridView.navigateToMonth(-1)
     }
     
     @objc private func nextMonthTapped() {
-        currentDate = Calendar.current.date(byAdding: .month, value: 1, to: currentDate) ?? currentDate
-        updateCalendar()
+        calendarGridView.navigateToMonth(1)
     }
     
     @objc private func todayTapped() {
-        currentDate = Date()
         selectedDate = Date()
-        updateCalendar()
-    }
-    
-    @objc private func dayButtonTapped(_ sender: UIButton) {
-        let calendarDay = calendarDays[sender.tag]
-        selectedDate = calendarDay.date
-        currentDate = calendarDay.date
-        updateCalendar()
+        currentDate = Date()
+        calendarGridView.scrollToToday()
+        updateYearMonthLabel()
+        updateDetailCard()
     }
     
     @objc private func addNoteTapped() {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy年MM月dd日"
+        let dateString = formatter.string(from: selectedDate)
+        
         let alert = UIAlertController(
             title: "添加备注",
-            message: "为今天添加一个备注提醒",
+            message: "为\(dateString)添加一个备注提醒",
             preferredStyle: .alert
         )
         
@@ -584,5 +370,18 @@ class CalendarViewController: UIViewController {
         })
         
         present(alert, animated: true)
+    }
+}
+
+// MARK: - CalendarGridViewDelegate
+extension CalendarViewController: CalendarGridViewDelegate {
+    func didSelectDate(_ date: Date) {
+        selectedDate = date
+        updateDetailCard()
+    }
+    
+    func didChangeMonth(_ date: Date) {
+        currentDate = date
+        updateYearMonthLabel()
     }
 }
