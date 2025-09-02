@@ -196,17 +196,23 @@ class CalendarViewController: UIViewController {
             NSLayoutConstraint.activate([
                 label.topAnchor.constraint(equalTo: weekHeaderView.topAnchor),
                 label.bottomAnchor.constraint(equalTo: weekHeaderView.bottomAnchor),
-                label.widthAnchor.constraint(equalTo: weekHeaderView.widthAnchor, multiplier: 1.0/7.0),
-                label.leadingAnchor.constraint(equalTo: weekHeaderView.leadingAnchor, constant: CGFloat(index) * UIScreen.main.bounds.width / 7.0)
+                label.widthAnchor.constraint(equalTo: weekHeaderView.widthAnchor, multiplier: 1.0/7.0)
             ])
+            
+            // 设置水平位置
+            if index == 0 {
+                label.leadingAnchor.constraint(equalTo: weekHeaderView.leadingAnchor).isActive = true
+            } else {
+                label.leadingAnchor.constraint(equalTo: weekLabels[index-1].trailingAnchor).isActive = true
+            }
         }
         
         contentView.addSubview(weekHeaderView)
         
         NSLayoutConstraint.activate([
             weekHeaderView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 16),
-            weekHeaderView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            weekHeaderView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            weekHeaderView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            weekHeaderView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             weekHeaderView.heightAnchor.constraint(equalToConstant: 40)
         ])
     }
@@ -220,8 +226,8 @@ class CalendarViewController: UIViewController {
         
         NSLayoutConstraint.activate([
             calendarGridView.topAnchor.constraint(equalTo: weekHeaderView.bottomAnchor, constant: 8),
-            calendarGridView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            calendarGridView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            calendarGridView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
+            calendarGridView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             calendarGridView.heightAnchor.constraint(equalToConstant: 300)
         ])
     }

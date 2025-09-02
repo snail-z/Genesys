@@ -1,4 +1,5 @@
 import UIKit
+import SnapKit
 
 protocol CalendarGridViewDelegate: AnyObject {
     func didSelectDate(_ date: Date)
@@ -75,12 +76,9 @@ class CalendarGridView: UIView {
     }
     
     private func setupConstraints() {
-        NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: topAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: bottomAnchor)
-        ])
+        collectionView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
     }
     
     private func setupData() {

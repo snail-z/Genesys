@@ -1,4 +1,5 @@
 import UIKit
+import SnapKit
 
 protocol MonthCollectionViewCellDelegate: AnyObject {
     func didSelectDate(_ date: Date)
@@ -15,8 +16,8 @@ class MonthCollectionViewCell: UICollectionViewCell {
     private var calendarDays: [CalendarDay] = []
     
     // MARK: - UI组件
+    private var monthCardView: UIView!
     private var dayCells: [CalendarDayCell] = []
-    private let weekdayLabels: [UILabel] = []
     
     // MARK: - 初始化
     override init(frame: CGRect) {
@@ -34,7 +35,24 @@ class MonthCollectionViewCell: UICollectionViewCell {
         backgroundColor = .clear
         contentView.backgroundColor = .clear
         
+        setupMonthCardView()
         setupDayCells()
+    }
+    
+    private func setupMonthCardView() {
+        monthCardView = UIView()
+        monthCardView.backgroundColor = .clear  // 默认透明，后期可扩展
+        
+        // 为将来的卡片效果预留样式设置
+        // monthCardView.layer.cornerRadius = 8
+        // monthCardView.layer.shadowOpacity = 0.03
+        // monthCardView.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+        
+        contentView.addSubview(monthCardView)
+        
+        monthCardView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
     }
     
     private func setupDayCells() {
@@ -42,7 +60,7 @@ class MonthCollectionViewCell: UICollectionViewCell {
         for _ in 0..<42 {
             let dayCell = CalendarDayCell()
             dayCell.delegate = self
-            contentView.addSubview(dayCell)
+            monthCardView.addSubview(dayCell)  // 🔑 添加到monthCardView而不是contentView
             dayCells.append(dayCell)
         }
     }
@@ -54,7 +72,7 @@ class MonthCollectionViewCell: UICollectionViewCell {
     }
     
     private func updateLayout() {
-        let containerBounds = contentView.bounds
+        let containerBounds = bounds  // 使用cell的bounds而不是monthCardView.bounds
         let cellWidth = containerBounds.width / 7
         let cellHeight = containerBounds.height / 6
         
@@ -126,6 +144,24 @@ class MonthCollectionViewCell: UICollectionViewCell {
         selectedDate = date
         generateCalendarData()
         updateDayCells()
+    }
+    
+    // MARK: - 卡片样式控制 (可扩展)
+    func enableCardEffect(backgroundColor: UIColor = UIColor.white.withAlphaComponent(0.1),
+                         cornerRadius: CGFloat = 8,
+                         shadowOpacity: Float = 0.03) {
+        monthCardView.backgroundColor = backgroundColor
+        monthCardView.layer.cornerRadius = cornerRadius
+        monthCardView.layer.shadowColor = UIColor.black.cgColor
+        monthCardView.layer.shadowOffset = CGSize(width: 0, height: 1)
+        monthCardView.layer.shadowRadius = 3
+        monthCardView.layer.shadowOpacity = shadowOpacity
+    }
+    
+    func disableCardEffect() {
+        monthCardView.backgroundColor = .clear
+        monthCardView.layer.cornerRadius = 0
+        monthCardView.layer.shadowOpacity = 0
     }
 }
 
