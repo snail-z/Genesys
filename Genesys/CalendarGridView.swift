@@ -41,7 +41,7 @@ class CalendarGridView: UIView {
     
     // MARK: - UI设置
     private func setupUI() {
-        backgroundColor = .systemBackground
+        backgroundColor = .clear
         setupCollectionView()
         setupConstraints()
     }
@@ -57,7 +57,7 @@ class CalendarGridView: UIView {
         // 创建CollectionView
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: flowLayout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
-        collectionView.backgroundColor = .systemBackground
+        collectionView.backgroundColor = .clear
         collectionView.isPagingEnabled = true
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.showsVerticalScrollIndicator = false

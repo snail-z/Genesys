@@ -48,8 +48,38 @@ class CalendarViewController: UIViewController {
         navigationController?.navigationBar.prefersLargeTitles = false
     }
     
+    private func setupGradientBackground() {
+        // 创建清新淡雅绿渐变背景
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = view.bounds
+        
+        // 清新淡雅绿色调
+        let lightGreen = UIColor(red: 0.95, green: 0.98, blue: 0.95, alpha: 1.0).cgColor    // 极淡的薄荷绿
+        let softGreen = UIColor(red: 0.90, green: 0.95, blue: 0.92, alpha: 1.0).cgColor     // 柔和浅绿
+        let paleGreen = UIColor(red: 0.93, green: 0.97, blue: 0.94, alpha: 1.0).cgColor     // 淡雅绿
+        
+        gradientLayer.colors = [lightGreen, softGreen, paleGreen]
+        gradientLayer.locations = [0.0, 0.5, 1.0]
+        gradientLayer.startPoint = CGPoint(x: 0.0, y: 0.0)
+        gradientLayer.endPoint = CGPoint(x: 1.0, y: 1.0)
+        
+        view.layer.insertSublayer(gradientLayer, at: 0)
+        
+        // 视图大小改变时更新渐变
+        gradientLayer.name = "backgroundGradient"
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        // 更新渐变层大小
+        if let gradientLayer = view.layer.sublayers?.first(where: { $0.name == "backgroundGradient" }) as? CAGradientLayer {
+            gradientLayer.frame = view.bounds
+        }
+    }
+    
     private func setupUI() {
-        view.backgroundColor = .systemBackground
+        setupGradientBackground()
         
         scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
@@ -83,7 +113,7 @@ class CalendarViewController: UIViewController {
     private func setupHeaderView() {
         headerView = UIView()
         headerView.translatesAutoresizingMaskIntoConstraints = false
-        headerView.backgroundColor = .secondarySystemBackground
+        headerView.backgroundColor = UIColor(red: 0.92, green: 0.96, blue: 0.93, alpha: 0.8)
         headerView.layer.cornerRadius = 12
         
         yearMonthLabel = UILabel()
@@ -108,7 +138,7 @@ class CalendarViewController: UIViewController {
         todayButton.translatesAutoresizingMaskIntoConstraints = false
         todayButton.setTitle("今", for: .normal)
         todayButton.titleLabel?.font = .boldSystemFont(ofSize: 16)
-        todayButton.backgroundColor = .systemBlue
+        todayButton.backgroundColor = UIColor(red: 0.4, green: 0.8, blue: 0.6, alpha: 1.0)
         todayButton.setTitleColor(.white, for: .normal)
         todayButton.layer.cornerRadius = 15
         todayButton.addTarget(self, action: #selector(todayTapped), for: .touchUpInside)
@@ -121,8 +151,8 @@ class CalendarViewController: UIViewController {
         
         NSLayoutConstraint.activate([
             headerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
-            headerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            headerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
+            headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
             headerView.heightAnchor.constraint(equalToConstant: 60),
             
             yearMonthLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
@@ -199,7 +229,7 @@ class CalendarViewController: UIViewController {
     private func setupDetailCardView() {
         detailCardView = UIView()
         detailCardView.translatesAutoresizingMaskIntoConstraints = false
-        detailCardView.backgroundColor = .secondarySystemBackground
+        detailCardView.backgroundColor = UIColor(red: 0.92, green: 0.96, blue: 0.93, alpha: 0.85)
         detailCardView.layer.cornerRadius = 16
         detailCardView.layer.shadowColor = UIColor.black.cgColor
         detailCardView.layer.shadowOffset = CGSize(width: 0, height: 2)
@@ -275,8 +305,8 @@ class CalendarViewController: UIViewController {
         
         NSLayoutConstraint.activate([
             detailCardView.topAnchor.constraint(equalTo: calendarGridView.bottomAnchor, constant: 20),
-            detailCardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            detailCardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            detailCardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
+            detailCardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
             detailCardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20),
             
             lunarInfoLabel.topAnchor.constraint(equalTo: detailCardView.topAnchor, constant: 20),

@@ -31,8 +31,8 @@ class MonthCollectionViewCell: UICollectionViewCell {
     
     // MARK: - UI设置
     private func setupUI() {
-        backgroundColor = .systemBackground
-        contentView.backgroundColor = .systemBackground
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
         
         setupDayCells()
     }

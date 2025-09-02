@@ -145,17 +145,17 @@ class CalendarDayCell: UIView {
             lunarDayLabel.textColor = .quaternaryLabel
         }
         
-        // 今天标记
+        // 今天标记 - 清新绿色主题
         if day.isToday {
-            containerView.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.2)
-            solarDayLabel.textColor = .systemBlue
+            containerView.backgroundColor = UIColor(red: 0.7, green: 0.9, blue: 0.8, alpha: 0.4)
+            solarDayLabel.textColor = UIColor(red: 0.2, green: 0.6, blue: 0.4, alpha: 1.0)
             solarDayLabel.font = .boldSystemFont(ofSize: 18)
         }
         
-        // 选中标记
+        // 选中标记 - 清新绿色边框
         if day.isSelected {
             containerView.layer.borderWidth = 2
-            containerView.layer.borderColor = UIColor.systemBlue.cgColor
+            containerView.layer.borderColor = UIColor(red: 0.3, green: 0.7, blue: 0.5, alpha: 1.0).cgColor
         }
         
         // 节日背景
