@@ -1,4 +1,5 @@
 import UIKit
+import SnapKit
 
 class CalendarViewController: UIViewController {
     
@@ -82,11 +83,9 @@ class CalendarViewController: UIViewController {
         setupGradientBackground()
         
         scrollView = UIScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.showsVerticalScrollIndicator = false
         
         contentView = UIView()
-        contentView.translatesAutoresizingMaskIntoConstraints = false
         
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
@@ -96,46 +95,38 @@ class CalendarViewController: UIViewController {
         setupCalendarGridView()
         setupDetailCardView()
         
-        NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            
-            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
-            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
-            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
-            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
-        ])
+        scrollView.snp.makeConstraints { make in
+            make.top.equalTo(view.safeAreaLayoutGuide.snp.top)
+            make.leading.trailing.bottom.equalToSuperview()
+        }
+        
+        contentView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+            make.width.equalToSuperview()
+        }
     }
     
     private func setupHeaderView() {
         headerView = UIView()
-        headerView.translatesAutoresizingMaskIntoConstraints = false
         headerView.backgroundColor = UIColor(red: 0.92, green: 0.96, blue: 0.93, alpha: 0.8)
         headerView.layer.cornerRadius = 12
         
         yearMonthLabel = UILabel()
-        yearMonthLabel.translatesAutoresizingMaskIntoConstraints = false
         yearMonthLabel.font = .boldSystemFont(ofSize: 20)
         yearMonthLabel.textColor = .label
         yearMonthLabel.textAlignment = .center
         
         prevButton = UIButton(type: .system)
-        prevButton.translatesAutoresizingMaskIntoConstraints = false
         prevButton.setImage(UIImage(systemName: "chevron.left"), for: .normal)
         prevButton.tintColor = .label
         prevButton.addTarget(self, action: #selector(prevMonthTapped), for: .touchUpInside)
         
         nextButton = UIButton(type: .system)
-        nextButton.translatesAutoresizingMaskIntoConstraints = false
         nextButton.setImage(UIImage(systemName: "chevron.right"), for: .normal)
         nextButton.tintColor = .label
         nextButton.addTarget(self, action: #selector(nextMonthTapped), for: .touchUpInside)
         
         todayButton = UIButton(type: .system)
-        todayButton.translatesAutoresizingMaskIntoConstraints = false
         todayButton.setTitle("今", for: .normal)
         todayButton.titleLabel?.font = .boldSystemFont(ofSize: 16)
         todayButton.backgroundColor = UIColor(red: 0.4, green: 0.8, blue: 0.6, alpha: 1.0)
@@ -149,42 +140,44 @@ class CalendarViewController: UIViewController {
         headerView.addSubview(nextButton)
         headerView.addSubview(todayButton)
         
-        NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 16),
-            headerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
-            headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
-            headerView.heightAnchor.constraint(equalToConstant: 60),
-            
-            yearMonthLabel.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            yearMonthLabel.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
-            
-            prevButton.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
-            prevButton.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
-            prevButton.widthAnchor.constraint(equalToConstant: 30),
-            prevButton.heightAnchor.constraint(equalToConstant: 30),
-            
-            nextButton.trailingAnchor.constraint(equalTo: todayButton.leadingAnchor, constant: -12),
-            nextButton.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
-            nextButton.widthAnchor.constraint(equalToConstant: 30),
-            nextButton.heightAnchor.constraint(equalToConstant: 30),
-            
-            todayButton.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -20),
-            todayButton.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
-            todayButton.widthAnchor.constraint(equalToConstant: 30),
-            todayButton.heightAnchor.constraint(equalToConstant: 30)
-        ])
+        headerView.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(16)
+            make.leading.equalToSuperview().offset(24)
+            make.trailing.equalToSuperview().offset(-24)
+            make.height.equalTo(60)
+        }
+        
+        yearMonthLabel.snp.makeConstraints { make in
+            make.center.equalToSuperview()
+        }
+        
+        prevButton.snp.makeConstraints { make in
+            make.leading.equalToSuperview().offset(20)
+            make.centerY.equalToSuperview()
+            make.size.equalTo(30)
+        }
+        
+        nextButton.snp.makeConstraints { make in
+            make.trailing.equalTo(todayButton.snp.leading).offset(-12)
+            make.centerY.equalToSuperview()
+            make.size.equalTo(30)
+        }
+        
+        todayButton.snp.makeConstraints { make in
+            make.trailing.equalToSuperview().offset(-20)
+            make.centerY.equalToSuperview()
+            make.size.equalTo(30)
+        }
     }
     
     private func setupWeekHeaderView() {
         weekHeaderView = UIView()
-        weekHeaderView.translatesAutoresizingMaskIntoConstraints = false
         
         let weekdays = ["日", "一", "二", "三", "四", "五", "六"]
         let colors: [UIColor] = [.systemRed, .label, .label, .label, .label, .label, .systemRed]
         
         for (index, weekday) in weekdays.enumerated() {
             let label = UILabel()
-            label.translatesAutoresizingMaskIntoConstraints = false
             label.text = weekday
             label.font = .systemFont(ofSize: 16, weight: .medium)
             label.textColor = colors[index]
@@ -193,48 +186,44 @@ class CalendarViewController: UIViewController {
             weekHeaderView.addSubview(label)
             weekLabels.append(label)
             
-            NSLayoutConstraint.activate([
-                label.topAnchor.constraint(equalTo: weekHeaderView.topAnchor),
-                label.bottomAnchor.constraint(equalTo: weekHeaderView.bottomAnchor),
-                label.widthAnchor.constraint(equalTo: weekHeaderView.widthAnchor, multiplier: 1.0/7.0)
-            ])
-            
-            // 设置水平位置
-            if index == 0 {
-                label.leadingAnchor.constraint(equalTo: weekHeaderView.leadingAnchor).isActive = true
-            } else {
-                label.leadingAnchor.constraint(equalTo: weekLabels[index-1].trailingAnchor).isActive = true
+            label.snp.makeConstraints { make in
+                make.top.bottom.equalToSuperview()
+                make.width.equalToSuperview().dividedBy(7)
+                
+                if index == 0 {
+                    make.leading.equalToSuperview()
+                } else {
+                    make.leading.equalTo(weekLabels[index-1].snp.trailing)
+                }
             }
         }
         
         contentView.addSubview(weekHeaderView)
         
-        NSLayoutConstraint.activate([
-            weekHeaderView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 16),
-            weekHeaderView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            weekHeaderView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            weekHeaderView.heightAnchor.constraint(equalToConstant: 40)
-        ])
+        weekHeaderView.snp.makeConstraints { make in
+            make.top.equalTo(headerView.snp.bottom).offset(16)
+            make.leading.equalToSuperview().offset(20)
+            make.trailing.equalToSuperview().offset(-20)
+            make.height.equalTo(40)
+        }
     }
     
     private func setupCalendarGridView() {
         calendarGridView = CalendarGridView()
-        calendarGridView.translatesAutoresizingMaskIntoConstraints = false
         calendarGridView.delegate = self
         
         contentView.addSubview(calendarGridView)
         
-        NSLayoutConstraint.activate([
-            calendarGridView.topAnchor.constraint(equalTo: weekHeaderView.bottomAnchor, constant: 8),
-            calendarGridView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            calendarGridView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
-            calendarGridView.heightAnchor.constraint(equalToConstant: 300)
-        ])
+        calendarGridView.snp.makeConstraints { make in
+            make.top.equalTo(weekHeaderView.snp.bottom).offset(8)
+            make.leading.equalToSuperview().offset(0)
+            make.trailing.equalToSuperview().offset(0)
+            make.height.equalTo(300)
+        }
     }
     
     private func setupDetailCardView() {
         detailCardView = UIView()
-        detailCardView.translatesAutoresizingMaskIntoConstraints = false
         detailCardView.backgroundColor = UIColor(red: 0.92, green: 0.96, blue: 0.93, alpha: 0.85)
         detailCardView.layer.cornerRadius = 16
         detailCardView.layer.shadowColor = UIColor.black.cgColor
@@ -244,14 +233,12 @@ class CalendarViewController: UIViewController {
         
         // 农历信息
         lunarInfoLabel = UILabel()
-        lunarInfoLabel.translatesAutoresizingMaskIntoConstraints = false
         lunarInfoLabel.font = .boldSystemFont(ofSize: 18)
         lunarInfoLabel.textColor = .label
         lunarInfoLabel.numberOfLines = 0
         
         // 宜事项
         let suitableIconLabel = UILabel()
-        suitableIconLabel.translatesAutoresizingMaskIntoConstraints = false
         suitableIconLabel.text = "宜"
         suitableIconLabel.font = .boldSystemFont(ofSize: 14)
         suitableIconLabel.textColor = .white
@@ -261,14 +248,12 @@ class CalendarViewController: UIViewController {
         suitableIconLabel.clipsToBounds = true
         
         suitableLabel = UILabel()
-        suitableLabel.translatesAutoresizingMaskIntoConstraints = false
         suitableLabel.font = .systemFont(ofSize: 14)
         suitableLabel.textColor = .secondaryLabel
         suitableLabel.numberOfLines = 0
         
         // 忌事项
         let avoidIconLabel = UILabel()
-        avoidIconLabel.translatesAutoresizingMaskIntoConstraints = false
         avoidIconLabel.text = "忌"
         avoidIconLabel.font = .boldSystemFont(ofSize: 14)
         avoidIconLabel.textColor = .white
@@ -278,14 +263,12 @@ class CalendarViewController: UIViewController {
         avoidIconLabel.clipsToBounds = true
         
         avoidLabel = UILabel()
-        avoidLabel.translatesAutoresizingMaskIntoConstraints = false
         avoidLabel.font = .systemFont(ofSize: 14)
         avoidLabel.textColor = .secondaryLabel
         avoidLabel.numberOfLines = 0
         
         // 添加备注按钮
         addNoteButton = UIButton(type: .system)
-        addNoteButton.translatesAutoresizingMaskIntoConstraints = false
         addNoteButton.setImage(UIImage(systemName: "square.and.pencil"), for: .normal)
         addNoteButton.setTitle("  添加备注", for: .normal)
         addNoteButton.titleLabel?.font = .systemFont(ofSize: 16)
@@ -294,7 +277,6 @@ class CalendarViewController: UIViewController {
         
         // 励志文案
         motivationLabel = UILabel()
-        motivationLabel.translatesAutoresizingMaskIntoConstraints = false
         motivationLabel.font = .systemFont(ofSize: 14)
         motivationLabel.textColor = .tertiaryLabel
         motivationLabel.textAlignment = .center
@@ -309,42 +291,52 @@ class CalendarViewController: UIViewController {
         detailCardView.addSubview(addNoteButton)
         detailCardView.addSubview(motivationLabel)
         
-        NSLayoutConstraint.activate([
-            detailCardView.topAnchor.constraint(equalTo: calendarGridView.bottomAnchor, constant: 20),
-            detailCardView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 24),
-            detailCardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -24),
-            detailCardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20),
-            
-            lunarInfoLabel.topAnchor.constraint(equalTo: detailCardView.topAnchor, constant: 20),
-            lunarInfoLabel.leadingAnchor.constraint(equalTo: detailCardView.leadingAnchor, constant: 20),
-            lunarInfoLabel.trailingAnchor.constraint(equalTo: detailCardView.trailingAnchor, constant: -20),
-            
-            suitableIconLabel.topAnchor.constraint(equalTo: lunarInfoLabel.bottomAnchor, constant: 16),
-            suitableIconLabel.leadingAnchor.constraint(equalTo: detailCardView.leadingAnchor, constant: 20),
-            suitableIconLabel.widthAnchor.constraint(equalToConstant: 20),
-            suitableIconLabel.heightAnchor.constraint(equalToConstant: 20),
-            
-            suitableLabel.centerYAnchor.constraint(equalTo: suitableIconLabel.centerYAnchor),
-            suitableLabel.leadingAnchor.constraint(equalTo: suitableIconLabel.trailingAnchor, constant: 8),
-            suitableLabel.trailingAnchor.constraint(equalTo: detailCardView.trailingAnchor, constant: -20),
-            
-            avoidIconLabel.topAnchor.constraint(equalTo: suitableLabel.bottomAnchor, constant: 12),
-            avoidIconLabel.leadingAnchor.constraint(equalTo: detailCardView.leadingAnchor, constant: 20),
-            avoidIconLabel.widthAnchor.constraint(equalToConstant: 20),
-            avoidIconLabel.heightAnchor.constraint(equalToConstant: 20),
-            
-            avoidLabel.centerYAnchor.constraint(equalTo: avoidIconLabel.centerYAnchor),
-            avoidLabel.leadingAnchor.constraint(equalTo: avoidIconLabel.trailingAnchor, constant: 8),
-            avoidLabel.trailingAnchor.constraint(equalTo: detailCardView.trailingAnchor, constant: -20),
-            
-            addNoteButton.topAnchor.constraint(equalTo: avoidLabel.bottomAnchor, constant: 20),
-            addNoteButton.centerXAnchor.constraint(equalTo: detailCardView.centerXAnchor),
-            
-            motivationLabel.topAnchor.constraint(equalTo: addNoteButton.bottomAnchor, constant: 20),
-            motivationLabel.leadingAnchor.constraint(equalTo: detailCardView.leadingAnchor, constant: 20),
-            motivationLabel.trailingAnchor.constraint(equalTo: detailCardView.trailingAnchor, constant: -20),
-            motivationLabel.bottomAnchor.constraint(equalTo: detailCardView.bottomAnchor, constant: -20)
-        ])
+        detailCardView.snp.makeConstraints { make in
+            make.top.equalTo(calendarGridView.snp.bottom).offset(20)
+            make.leading.equalToSuperview().offset(24)
+            make.trailing.equalToSuperview().offset(-24)
+            make.bottom.equalToSuperview().offset(-20)
+        }
+        
+        lunarInfoLabel.snp.makeConstraints { make in
+            make.top.equalToSuperview().offset(20)
+            make.leading.trailing.equalToSuperview().inset(20)
+        }
+        
+        suitableIconLabel.snp.makeConstraints { make in
+            make.top.equalTo(lunarInfoLabel.snp.bottom).offset(16)
+            make.leading.equalToSuperview().offset(20)
+            make.size.equalTo(20)
+        }
+        
+        suitableLabel.snp.makeConstraints { make in
+            make.centerY.equalTo(suitableIconLabel)
+            make.leading.equalTo(suitableIconLabel.snp.trailing).offset(8)
+            make.trailing.equalToSuperview().offset(-20)
+        }
+        
+        avoidIconLabel.snp.makeConstraints { make in
+            make.top.equalTo(suitableLabel.snp.bottom).offset(12)
+            make.leading.equalToSuperview().offset(20)
+            make.size.equalTo(20)
+        }
+        
+        avoidLabel.snp.makeConstraints { make in
+            make.centerY.equalTo(avoidIconLabel)
+            make.leading.equalTo(avoidIconLabel.snp.trailing).offset(8)
+            make.trailing.equalToSuperview().offset(-20)
+        }
+        
+        addNoteButton.snp.makeConstraints { make in
+            make.top.equalTo(avoidLabel.snp.bottom).offset(20)
+            make.centerX.equalToSuperview()
+        }
+        
+        motivationLabel.snp.makeConstraints { make in
+            make.top.equalTo(addNoteButton.snp.bottom).offset(20)
+            make.leading.trailing.equalToSuperview().inset(20)
+            make.bottom.equalToSuperview().offset(-20)
+        }
     }
     
     // MARK: - 更新日历

@@ -51,8 +51,11 @@ class MonthCollectionViewCell: UICollectionViewCell {
         contentView.addSubview(monthCardView)
         
         monthCardView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+            make.top.bottom.equalToSuperview()
+            make.left.equalToSuperview().offset(20)
+            make.right.equalToSuperview().offset(-20)
         }
+//        monthCardView.backgroundColor = .red
     }
     
     private func setupDayCells() {
@@ -68,13 +71,22 @@ class MonthCollectionViewCell: UICollectionViewCell {
     // MARK: - 布局
     override func layoutSubviews() {
         super.layoutSubviews()
+        
+        // 先让父类完成约束计算
+        monthCardView.layoutIfNeeded()
         updateLayout()
     }
     
     private func updateLayout() {
-        let containerBounds = bounds  // 使用cell的bounds而不是monthCardView.bounds
-        let cellWidth = containerBounds.width / 7
-        let cellHeight = containerBounds.height / 6
+        let containerBounds = monthCardView.bounds  // 使用monthCardView的bounds来计算
+        
+        // 如果bounds还是0，使用cell的bounds减去边距
+        let actualBounds = containerBounds.isEmpty ? 
+            CGRect(x: 0, y: 0, width: bounds.width - 40, height: bounds.height) : 
+            containerBounds
+            
+        let cellWidth = actualBounds.width / 7
+        let cellHeight = actualBounds.height / 6
         
         for (index, dayCell) in dayCells.enumerated() {
             let row = index / 7
