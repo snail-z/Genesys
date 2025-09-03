@@ -196,29 +196,49 @@ class WidgetPreviewCell: UICollectionViewCell {
     
     
     let colors: [UIColor] = [.systemRed, .systemBlue, .systemGreen, .systemOrange, .systemPurple, .systemPink, .systemYellow]
+    private var isConfigured = false
+    private var currentWidgetType: WidgetType?
     
     private func setupUI() {
         backgroundColor = .clear
         contentView.backgroundColor = .clear
     }
     
-    private func startContinuousRotation(for view: UIView) {
-        // 设置阴影属性
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        
+        // 停止动画
+        widgetView?.layer.removeAllAnimations()
+        
+        // 重置状态标记
+        isConfigured = false
+        currentWidgetType = nil
+        
+        // 移除视图
+        widgetView?.removeFromSuperview()
+        widgetView = nil
+    }
+    
+    private func startContinuousRotation(for view: UIView, isSmall: Bool = false) {
+        // 确保移除之前的动画
+        view.layer.removeAnimation(forKey: "cornerRotation")
+        
+        // 设置阴影属性 - 更大偏移但色彩减弱，避免阴影过散
         view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOffset = CGSize(width: 0, height: 8)
-        view.layer.shadowRadius = 12
-        view.layer.shadowOpacity = 0.2
+        view.layer.shadowOffset = CGSize(width: 0, height: 40)  // 继续增加向下偏移
+        view.layer.shadowRadius = 20  // 减小模糊半径，让阴影更聚焦
+        view.layer.shadowOpacity = 0.25  // 减弱透明度，让阴影更柔和
         view.layer.masksToBounds = false
         
         // 四个角轮流转动的丝滑关键帧动画
         let cornerAnimation = CAKeyframeAnimation(keyPath: "transform")
         
-        // 设置基础透视
+        // 设置基础透视 (增强透视效果)
         var baseTransform = CATransform3DIdentity
-        baseTransform.m34 = -1.0 / 1000.0
+        baseTransform.m34 = -1.0 / 800.0  // 增强透视效果
         
-        // 定义四个角的轻微转动状态 (增加更多中间帧以确保丝滑)
-        let angle: Float = 0.12
+        // 定义四个角的轻微转动状态 (小号卡片需要更大的角度)
+        let angle: Float = isSmall ? 0.4 : 0.25  // 小号卡片用更大的角度
         
         // 创建更多中间状态来确保丝滑过渡
         var transforms: [CATransform3D] = []
@@ -245,27 +265,55 @@ class WidgetPreviewCell: UICollectionViewCell {
         cornerAnimation.calculationMode = .cubic  // 使用三次贝塞尔插值，更丝滑
         cornerAnimation.timingFunction = CAMediaTimingFunction(name: .linear)
         
+        // 添加很小的随机延迟，让每个卡片的动画不同步
+        let randomDelay = Double.random(in: 0.0...0.5)
+        cornerAnimation.beginTime = CACurrentMediaTime() + randomDelay
+        
         view.layer.add(cornerAnimation, forKey: "cornerRotation")
     }
     
     func configure(with widgetSize: WidgetSize) {
-        // 清除之前的 widgetView
-        widgetView?.removeFromSuperview()
-        
-        // 创建新的 widgetView
-        widgetView = UIView()
-        widgetView.layer.cornerRadius = 12
-        widgetView.layer.masksToBounds = false
-        
-        contentView.addSubview(widgetView)
-        
-        // 设置约束让 widget 居中显示
-        widgetView.snp.makeConstraints { make in
-//            make.center.equalToSuperview()
-//            make.size.equalTo(widgetSize.widgetSize)
-            make.edges.equalToSuperview()
+        // 如果已经配置过相同类型，直接返回，避免重复创建
+        if isConfigured && currentWidgetType == widgetSize.type {
+            return
         }
         
+        // 清除之前的动画
+        widgetView?.layer.removeAllAnimations()
+        
+        // 只有在类型改变或首次配置时才重新创建
+        if !isConfigured || currentWidgetType != widgetSize.type {
+            // 清除之前的 widgetView
+            widgetView?.removeFromSuperview()
+            
+            // 创建新的 widgetView
+            widgetView = UIView()
+            widgetView.layer.cornerRadius = 12
+            widgetView.layer.masksToBounds = false
+            
+            contentView.addSubview(widgetView)
+            
+            // 设置约束让 widget 居中显示
+            widgetView.snp.makeConstraints { make in
+                make.edges.equalToSuperview()
+            }
+            
+            // 根据类型添加内容
+            switch widgetSize.type {
+            case .small:
+                addSmallWidgetContent(to: widgetView)
+            case .medium:
+                addMediumWidgetContent(to: widgetView)
+            case .large:
+                addLargeWidgetContent(to: widgetView)
+            }
+            
+            // 标记已配置
+            isConfigured = true
+            currentWidgetType = widgetSize.type
+        }
+        
+        // 每次都设置颜色（这个比较轻量）
         widgetView.backgroundColor = colors.randomElement()
         
         // 设置基础透视效果
@@ -273,20 +321,11 @@ class WidgetPreviewCell: UICollectionViewCell {
         baseTransform.m34 = -1.0 / 1000.0  // 设置透视效果
         widgetView.layer.transform = baseTransform
         
-        // 延迟1秒后开始动画
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            self.startContinuousRotation(for: self.widgetView)
-        }
-        
-        // 根据类型添加内容
-        switch widgetSize.type {
-        case .small:
-            addSmallWidgetContent(to: widgetView)
-        case .medium:
-            addMediumWidgetContent(to: widgetView)
-        case .large:
-            addLargeWidgetContent(to: widgetView)
-        }
+        // 确保在下一个runloop开始动画，小号卡片需要更大的动画幅度
+//        DispatchQueue.main.async {
+            let isSmallWidget = (widgetSize.type == .small)
+            self.startContinuousRotation(for: self.widgetView, isSmall: isSmallWidget)
+//        }
     }
     
     private func addSmallWidgetContent(to view: UIView) {
