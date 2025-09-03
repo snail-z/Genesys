@@ -41,6 +41,7 @@ class CalendarViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupNavigationBar()
+        updateYearMonthLabel()  // 初始化年月显示
         updateDetailCard()
     }
     
@@ -73,9 +74,14 @@ class CalendarViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         
-        // 更新渐变层大小
+        // 更新背景渐变层大小
         if let gradientLayer = view.layer.sublayers?.first(where: { $0.name == "backgroundGradient" }) as? CAGradientLayer {
             gradientLayer.frame = view.bounds
+        }
+        
+        // 更新headerView渐变层大小
+        if let headerGradientLayer = headerView.layer.sublayers?.first(where: { $0.name == "headerGradient" }) as? CAGradientLayer {
+            headerGradientLayer.frame = headerView.bounds
         }
     }
     
@@ -108,8 +114,20 @@ class CalendarViewController: UIViewController {
     
     private func setupHeaderView() {
         headerView = UIView()
-        headerView.backgroundColor = UIColor(red: 0.92, green: 0.96, blue: 0.93, alpha: 0.8)
         headerView.layer.cornerRadius = 12
+        
+        // 添加从右到左的雅绿渐变
+        let gradientLayer = CAGradientLayer()
+        let leftGreen = UIColor(red: 0.82, green: 0.90, blue: 0.85, alpha: 0.95).cgColor   // 更深的雅绿
+        let rightGreen = UIColor(red: 0.87, green: 0.93, blue: 0.89, alpha: 0.95).cgColor  // 中等深度的雅绿
+        
+        gradientLayer.colors = [rightGreen, leftGreen]  // 从右到左
+        gradientLayer.startPoint = CGPoint(x: 1.0, y: 0.5)
+        gradientLayer.endPoint = CGPoint(x: 0.0, y: 0.5)
+        gradientLayer.cornerRadius = 12
+        gradientLayer.name = "headerGradient"
+        
+        headerView.layer.insertSublayer(gradientLayer, at: 0)
         
         yearMonthLabel = UILabel()
         yearMonthLabel.font = .boldSystemFont(ofSize: 20)
@@ -148,7 +166,9 @@ class CalendarViewController: UIViewController {
         }
         
         yearMonthLabel.snp.makeConstraints { make in
-            make.center.equalToSuperview()
+            make.centerY.equalToSuperview()
+            make.leading.equalTo(prevButton.snp.trailing).offset(12)
+            make.trailing.equalTo(nextButton.snp.leading).offset(-12)
         }
         
         prevButton.snp.makeConstraints { make in

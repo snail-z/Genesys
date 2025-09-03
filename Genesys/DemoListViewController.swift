@@ -13,13 +13,14 @@ class DemoListViewController: UIViewController {
     private let demoItems: [DemoItem] = [
         DemoItem(title: "Widget基础示例", description: "展示基础Widget的创建和配置", icon: "square.fill"),
         DemoItem(title: "Timeline更新", description: "演示Widget的时间线更新机制", icon: "clock.fill"),
-        DemoItem(title: "用户配置", description: "展示Widget的用户配置选项", icon: "gear.circle.fill"),
+        DemoItem(title: "添加Widget弹窗", description: "演示Widget添加弹窗和配置界面", icon: "plus.circle.fill"),
         DemoItem(title: "动态内容", description: "显示动态变化的Widget内容", icon: "arrow.triangle.2.circlepath"),
         DemoItem(title: "网络数据", description: "从网络获取数据并显示在Widget中", icon: "network"),
         DemoItem(title: "深度链接", description: "Widget点击跳转到应用特定页面", icon: "link.circle.fill"),
         DemoItem(title: "多尺寸适配", description: "适配不同尺寸的Widget布局", icon: "rectangle.3.group.fill"),
         DemoItem(title: "日历Widget", description: "显示日历和日程安排的Widget示例", icon: "calendar"),
-        DemoItem(title: "Live Activity", description: "实时活动展示示例", icon: "bolt.circle.fill")
+        DemoItem(title: "Live Activity", description: "实时活动展示示例", icon: "bolt.circle.fill"),
+        DemoItem(title: "高级Widget示例", description: "展示复杂Widget功能和交互", icon: "star.circle.fill")
     ]
     
     override func viewDidLoad() {

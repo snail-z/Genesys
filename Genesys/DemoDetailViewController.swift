@@ -155,17 +155,18 @@ class DemoDetailViewController: UIViewController {
             合理的Timeline更新策略能够确保Widget内容的及时性，同时不会过度消耗系统资源。
             """
             
-        case "用户配置":
+        case "添加Widget弹窗":
             return """
-            Widget用户配置演示：
+            Widget添加弹窗演示：
             
-            1. 创建配置Intent
-            2. 定义配置选项
-            3. 实现配置界面
-            4. 处理配置变更
-            5. 保存用户偏好
+            1. 创建添加Widget界面
+            2. 展示可用的Widget类型
+            3. 预览不同尺寸的Widget
+            4. 配置Widget参数
+            5. 实现拖拽添加功能
+            6. 处理添加确认和取消
             
-            用户配置让Widget更加个性化，满足不同用户的需求。
+            这个功能模拟系统的Widget添加流程，让用户能够方便地预览和配置Widget。
             """
             
         case "动态内容":
@@ -248,17 +249,62 @@ class DemoDetailViewController: UIViewController {
             Live Activity为正在进行的活动提供实时更新。
             """
             
+        case "高级Widget示例":
+            return """
+            高级Widget示例演示：
+            
+            1. 复杂数据处理和展示
+            2. 多层级交互设计
+            3. 自定义动画效果
+            4. 高级布局技巧
+            5. 性能优化策略
+            6. 错误处理机制
+            7. 无障碍功能支持
+            
+            这个演示展示了Widget开发中的高级技术和最佳实践。
+            """
+            
         default:
             return "这是一个Widget演示示例，展示了Widget开发的各种技术和最佳实践。"
         }
     }
     
     @objc private func runDemoTapped() {
-        // 如果是日历Widget，直接跳转到日历页面
-        if demoItem.title == "日历Widget" {
+        switch demoItem.title {
+        case "日历Widget":
             let calendarVC = CalendarViewController()
             navigationController?.pushViewController(calendarVC, animated: true)
-        } else {
+            
+        case "添加Widget弹窗":
+            let widgetAddVC = WidgetAddViewController()
+            widgetAddVC.modalPresentationStyle = .pageSheet
+            if let sheet = widgetAddVC.sheetPresentationController {
+                sheet.detents = [.large()]
+                sheet.prefersGrabberVisible = true
+                sheet.preferredCornerRadius = 20
+            }
+            present(widgetAddVC, animated: true)
+            
+        case "高级Widget示例":
+            let alert = UIAlertController(
+                title: "高级Widget演示",
+                message: "这是一个复杂的Widget功能演示，包含了多种高级特性和交互效果。",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "查看演示", style: .default) { _ in
+                // 这里可以跳转到具体的高级演示页面
+                let demoAlert = UIAlertController(
+                    title: "演示功能",
+                    message: "• 复杂数据处理\n• 自定义动画\n• 多层级交互\n• 性能优化",
+                    preferredStyle: .alert
+                )
+                demoAlert.addAction(UIAlertAction(title: "确定", style: .default))
+                self.present(demoAlert, animated: true)
+            })
+            alert.addAction(UIAlertAction(title: "取消", style: .cancel))
+            present(alert, animated: true)
+            
+        default:
             let alert = UIAlertController(
                 title: "演示运行",
                 message: "演示\"\(demoItem.title)\"已启动！\n\n在实际项目中，这里会执行具体的演示代码。",
