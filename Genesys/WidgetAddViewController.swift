@@ -5,21 +5,28 @@ import SnapKit
 struct WidgetSize {
     let name: String
     let widgetSize: CGSize
+    let type: WidgetType
+}
+
+enum WidgetType: Int, CaseIterable {
+    case small = 0
+    case medium = 1
+    case large = 2
 }
 
 class WidgetAddViewController: UIViewController {
     
     private let widgetSizes: [WidgetSize] = [
-        WidgetSize(name: "小", widgetSize: CGSize(width: 120, height: 120)),
-        WidgetSize(name: "中", widgetSize: CGSize(width: 260, height: 120)),  
-        WidgetSize(name: "大", widgetSize: CGSize(width: 260, height: 260))
+        WidgetSize(name: "小", widgetSize: CGSize(width: 120, height: 120), type: .small),
+        WidgetSize(name: "中", widgetSize: CGSize(width: 260, height: 120), type: .medium),  
+        WidgetSize(name: "大", widgetSize: CGSize(width: 260, height: 260), type: .large)
     ]
     
     private var backgroundView: UIVisualEffectView!
     private var headerView: UIView!
     private var headerTitleLabel: UILabel!
     private var closeButton: UIButton!
-    private var scrollView: UIScrollView!
+    private var collectionView: UICollectionView!
     private var pageControl: UIPageControl!
     private var addButton: UIButton!
     
@@ -30,8 +37,7 @@ class WidgetAddViewController: UIViewController {
     
     private func setupUI() {
         setupBackground()
-        setupHeaderView()
-        setupScrollView()
+        setupCollectionView()
         setupPageControl()
         setupAddButton()
         setupConstraints()
@@ -44,78 +50,243 @@ class WidgetAddViewController: UIViewController {
         view.addSubview(backgroundView)
     }
     
-    private func setupHeaderView() {
-        headerView = UIView()
-        headerView.backgroundColor = .systemBackground
-        headerView.layer.cornerRadius = 20
-        headerView.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        view.addSubview(headerView)
+    private func setupCollectionView() {
+        let layout = DynamicSpacingFlowLayout()
+        layout.minimumLineSpacing = 20
+        layout.sideInset = 20
         
-        headerTitleLabel = UILabel()
-        headerTitleLabel.text = "智能叠放"
-        headerTitleLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        headerTitleLabel.textAlignment = .center
-        headerView.addSubview(headerTitleLabel)
+        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .white
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        collectionView.showsHorizontalScrollIndicator = false
+        collectionView.translatesAutoresizingMaskIntoConstraints = false
+//        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "cell")
+        collectionView.isPagingEnabled = true
         
-        closeButton = UIButton(type: .system)
-        closeButton.setTitle("✕", for: .normal)
-        closeButton.setTitleColor(.secondaryLabel, for: .normal)
-        closeButton.titleLabel?.font = UIFont.systemFont(ofSize: 18)
-        headerView.addSubview(closeButton)
+//        collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+//        collectionView.backgroundColor = .clear
+//        collectionView.isPagingEnabled = false  // 关闭系统分页，使用自定义停靠
+//        collectionView.showsHorizontalScrollIndicator = false
+//        collectionView.dataSource = self
+//        collectionView.delegate = self
+//        collectionView.decelerationRate = UIScrollView.DecelerationRate.fast
+        
+        // 注册cell
+        collectionView.register(WidgetPreviewCell.self, forCellWithReuseIdentifier: "WidgetPreviewCell")
+        
+        view.addSubview(collectionView)
     }
     
-    private func setupScrollView() {
-        scrollView = UIScrollView()
-        scrollView.isPagingEnabled = true
-        scrollView.showsHorizontalScrollIndicator = false
-        scrollView.delegate = self
-        view.addSubview(scrollView)
+    
+    private func setupPageControl() {
+        pageControl = UIPageControl()
+        pageControl.numberOfPages = widgetSizes.count
+        pageControl.currentPage = 0
+        pageControl.pageIndicatorTintColor = .systemGray4
+        pageControl.currentPageIndicatorTintColor = .systemGray2
+        view.addSubview(pageControl)
+    }
+    
+    private func setupAddButton() {
+        addButton = UIButton(type: .system)
+        addButton.setTitle("添加小组件", for: .normal)
+        addButton.setTitleColor(.white, for: .normal)
+        addButton.backgroundColor = .systemBlue
+        addButton.layer.cornerRadius = 25
+        addButton.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        view.addSubview(addButton)
+    }
+    
+    private func setupConstraints() {
+        // 背景视图约束
+        backgroundView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         
-        // 创建简化的Widget预览卡片
-        for (index, widget) in widgetSizes.enumerated() {
-            let cardView = createSimpleWidgetCard(for: widget, at: index)
-            cardView.backgroundColor = (index % 2 == 0) ? UIColor.cyan : .orange
-            scrollView.addSubview(cardView)
-            scrollView.backgroundColor = .gray
+        // 集合视图约束
+        collectionView.snp.makeConstraints { make in
+            make.top.equalTo(140)
+            make.left.right.equalToSuperview()
+            make.height.equalTo(300)
+        }
+        
+        // 页面控制器约束
+        pageControl.snp.makeConstraints { make in
+            make.top.equalTo(collectionView.snp.bottom).offset(30)
+            make.centerX.equalToSuperview()
+        }
+        
+        // 添加按钮约束
+        addButton.snp.makeConstraints { make in
+            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-30)
+            make.left.equalToSuperview().offset(30)
+            make.right.equalToSuperview().offset(-30)
+            make.height.equalTo(50)
         }
     }
     
-    private func createSimpleWidgetCard(for widget: WidgetSize, at index: Int) -> UIView {
-        // 直接返回Widget预览，不需要白色卡片包装
-        let widgetPreview = createWidgetPreview(for: widget, at: index)
-        
-        // 设置Widget位置
-        let screenWidth = UIScreen.main.bounds.width
-        let widgetX = (screenWidth - widget.widgetSize.width) / 2 + CGFloat(index) * screenWidth
-        let widgetY: CGFloat = (300 - widget.widgetSize.height) / 2
-        
-        widgetPreview.frame = CGRect(x: widgetX, y: widgetY, width: widget.widgetSize.width, height: widget.widgetSize.height)
-        
-        return widgetPreview
+    let colors: [UIColor] = [.systemRed, .systemBlue, .systemGreen, .systemOrange, .systemPurple, .systemPink, .systemYellow]
+}
+
+// MARK: - UICollectionViewDataSource
+extension WidgetAddViewController: UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return widgetSizes.count
     }
     
-    private func createWidgetPreview(for widget: WidgetSize, at index: Int) -> UIView {
-        let widgetView = UIView()
-        widgetView.backgroundColor = .systemBackground
-        widgetView.layer.cornerRadius = index == 2 ? 20 : 16
-        widgetView.layer.shadowColor = UIColor.black.cgColor
-        widgetView.layer.shadowOffset = CGSize(width: 0, height: 2)
-        widgetView.layer.shadowRadius = 10
-        widgetView.layer.shadowOpacity = 0.1
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "WidgetPreviewCell", for: indexPath) as! WidgetPreviewCell
+        let widgetSize = widgetSizes[indexPath.item]
+        cell.configure(with: widgetSize)
+//        cell.contentView.backgroundColor = (indexPath.item % 2 == 0 ) ? .orange : .cyan
         
-        // 根据不同尺寸添加不同的内容
-        switch index {
-        case 0: // 小号
-            addSmallWidgetContent(to: widgetView)
-        case 1: // 中号
-            addMediumWidgetContent(to: widgetView)
-        case 2: // 大号
-            addLargeWidgetContent(to: widgetView)
+//        cell.backgroundColor = colors[indexPath.item % colors.count]
+//        cell.layer.cornerRadius = 12
+//        cell.layer.masksToBounds = true
+        return cell
+    }
+}
+
+// MARK: - UICollectionViewDelegateFlowLayout
+extension WidgetAddViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        
+        switch indexPath.item % 3 {
+        case 0:
+            return CGSize(width: 140, height: 140)
+        case 1:
+            return CGSize(width: (collectionView.frame.width - 100), height: 140)
+        case 2:
+            return CGSize(width: (collectionView.frame.width - 100), height: (collectionView.frame.width - 100))
         default:
-            break
+            return  .zero
         }
         
-        return widgetView
+//        let widgetSize = widgetSizes[indexPath.item]
+//        let heightt: CGFloat = 260
+//        return CGSize(width: widgetSize.widgetSize.width, height: heightt)
+//        return CGSize(width: collectionView.frame.width, height: collectionView.frame.height)
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let page = Int((scrollView.contentOffset.x + scrollView.frame.width / 2) / scrollView.frame.width)
+        let clampedPage = max(0, min(page, widgetSizes.count - 1))
+        
+        if pageControl.currentPage != clampedPage {
+            pageControl.currentPage = clampedPage
+        }
+    }
+}
+
+// MARK: - WidgetPreviewCell
+class WidgetPreviewCell: UICollectionViewCell {
+    
+    private var widgetView: UIView!
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupUI()
+    }
+    
+    
+    let colors: [UIColor] = [.systemRed, .systemBlue, .systemGreen, .systemOrange, .systemPurple, .systemPink, .systemYellow]
+    
+    private func setupUI() {
+        backgroundColor = .clear
+        contentView.backgroundColor = .clear
+    }
+    
+    private func startContinuousRotation(for view: UIView) {
+        // 设置阴影属性
+        view.layer.shadowColor = UIColor.black.cgColor
+        view.layer.shadowOffset = CGSize(width: 0, height: 8)
+        view.layer.shadowRadius = 12
+        view.layer.shadowOpacity = 0.2
+        view.layer.masksToBounds = false
+        
+        // 四个角轮流转动的丝滑关键帧动画
+        let cornerAnimation = CAKeyframeAnimation(keyPath: "transform")
+        
+        // 设置基础透视
+        var baseTransform = CATransform3DIdentity
+        baseTransform.m34 = -1.0 / 1000.0
+        
+        // 定义四个角的轻微转动状态 (增加更多中间帧以确保丝滑)
+        let angle: Float = 0.12
+        
+        // 创建更多中间状态来确保丝滑过渡
+        var transforms: [CATransform3D] = []
+        let totalFrames = 32 // 增加关键帧数量
+        
+        for i in 0..<totalFrames {
+            let progress = Float(i) / Float(totalFrames - 1)
+            let circleProgress = progress * 2 * Float.pi
+            
+            // 计算当前角度的X和Y旋转
+            let xRotation = sin(circleProgress * 2) * angle * 0.8  // X轴摆动
+            let yRotation = cos(circleProgress * 2) * angle * 0.8  // Y轴摆动
+            
+            var transform = baseTransform
+            transform = CATransform3DRotate(transform, CGFloat(xRotation), 1.0, 0.0, 0.0)
+            transform = CATransform3DRotate(transform, CGFloat(yRotation), 0.0, 1.0, 0.0)
+            
+            transforms.append(transform)
+        }
+        
+        cornerAnimation.values = transforms
+        cornerAnimation.duration = 15.0
+        cornerAnimation.repeatCount = Float.infinity
+        cornerAnimation.calculationMode = .cubic  // 使用三次贝塞尔插值，更丝滑
+        cornerAnimation.timingFunction = CAMediaTimingFunction(name: .linear)
+        
+        view.layer.add(cornerAnimation, forKey: "cornerRotation")
+    }
+    
+    func configure(with widgetSize: WidgetSize) {
+        // 清除之前的 widgetView
+        widgetView?.removeFromSuperview()
+        
+        // 创建新的 widgetView
+        widgetView = UIView()
+        widgetView.layer.cornerRadius = 12
+        widgetView.layer.masksToBounds = false
+        
+        contentView.addSubview(widgetView)
+        
+        // 设置约束让 widget 居中显示
+        widgetView.snp.makeConstraints { make in
+//            make.center.equalToSuperview()
+//            make.size.equalTo(widgetSize.widgetSize)
+            make.edges.equalToSuperview()
+        }
+        
+        widgetView.backgroundColor = colors.randomElement()
+        
+        // 设置基础透视效果
+        var baseTransform = CATransform3DIdentity
+        baseTransform.m34 = -1.0 / 1000.0  // 设置透视效果
+        widgetView.layer.transform = baseTransform
+        
+        // 延迟1秒后开始动画
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            self.startContinuousRotation(for: self.widgetView)
+        }
+        
+        // 根据类型添加内容
+        switch widgetSize.type {
+        case .small:
+            addSmallWidgetContent(to: widgetView)
+        case .medium:
+            addMediumWidgetContent(to: widgetView)
+        case .large:
+            addLargeWidgetContent(to: widgetView)
+        }
     }
     
     private func addSmallWidgetContent(to view: UIView) {
@@ -272,89 +443,5 @@ class WidgetAddViewController: UIViewController {
             make.height.equalTo(120)
         }
     }
-    
-    private func setupPageControl() {
-        pageControl = UIPageControl()
-        pageControl.numberOfPages = widgetSizes.count
-        pageControl.currentPage = 0
-        pageControl.pageIndicatorTintColor = .systemGray4
-        pageControl.currentPageIndicatorTintColor = .systemGray2
-        view.addSubview(pageControl)
-    }
-    
-    private func setupAddButton() {
-        addButton = UIButton(type: .system)
-        addButton.setTitle("添加小组件", for: .normal)
-        addButton.setTitleColor(.white, for: .normal)
-        addButton.backgroundColor = .systemBlue
-        addButton.layer.cornerRadius = 25
-        addButton.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
-        view.addSubview(addButton)
-    }
-    
-    private func setupConstraints() {
-        // 背景视图约束
-        backgroundView.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
-        }
-        
-        // 头部视图约束
-        headerView.snp.makeConstraints { make in
-            make.top.equalTo(view.safeAreaLayoutGuide).offset(60)
-            make.left.equalToSuperview().offset(30)
-            make.right.equalToSuperview().offset(-30)
-            make.height.equalTo(80)
-        }
-        
-        // 头部标题约束
-        headerTitleLabel.snp.makeConstraints { make in
-            make.centerX.centerY.equalToSuperview()
-        }
-        
-        // 关闭按钮约束
-        closeButton.snp.makeConstraints { make in
-            make.right.equalToSuperview().offset(-20)
-            make.centerY.equalToSuperview()
-            make.size.equalTo(30)
-        }
-        
-        // 滚动视图约束
-        scrollView.snp.makeConstraints { make in
-            make.top.equalTo(headerView.snp.bottom).offset(40)
-            make.left.right.equalToSuperview()
-            make.height.equalTo(300)
-        }
-        
-        // 页面控制器约束
-        pageControl.snp.makeConstraints { make in
-            make.top.equalTo(scrollView.snp.bottom).offset(30)
-            make.centerX.equalToSuperview()
-        }
-        
-        // 添加按钮约束
-        addButton.snp.makeConstraints { make in
-            make.bottom.equalTo(view.safeAreaLayoutGuide).offset(-30)
-            make.left.equalToSuperview().offset(30)
-            make.right.equalToSuperview().offset(-30)
-            make.height.equalTo(50)
-        }
-        
-        // 设置scrollView的contentSize
-        DispatchQueue.main.async {
-            let screenWidth = UIScreen.main.bounds.width
-            self.scrollView.contentSize = CGSize(width: CGFloat(self.widgetSizes.count) * screenWidth, height: 300)
-        }
-    }
 }
 
-// MARK: - ScrollView Delegate
-extension WidgetAddViewController: UIScrollViewDelegate {
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let page = Int((scrollView.contentOffset.x + scrollView.frame.width / 2) / scrollView.frame.width)
-        let clampedPage = max(0, min(page, widgetSizes.count - 1))
-        
-        if pageControl.currentPage != clampedPage {
-            pageControl.currentPage = clampedPage
-        }
-    }
-}

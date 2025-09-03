@@ -14,6 +14,7 @@ class DemoListViewController: UIViewController {
         DemoItem(title: "Widget基础示例", description: "展示基础Widget的创建和配置", icon: "square.fill"),
         DemoItem(title: "Timeline更新", description: "演示Widget的时间线更新机制", icon: "clock.fill"),
         DemoItem(title: "添加Widget弹窗", description: "演示Widget添加弹窗和配置界面", icon: "plus.circle.fill"),
+        DemoItem(title: "Widget使用教程", description: "如何将小组件添加到主屏幕", icon: "questionmark.circle.fill"),
         DemoItem(title: "动态内容", description: "显示动态变化的Widget内容", icon: "arrow.triangle.2.circlepath"),
         DemoItem(title: "网络数据", description: "从网络获取数据并显示在Widget中", icon: "network"),
         DemoItem(title: "深度链接", description: "Widget点击跳转到应用特定页面", icon: "link.circle.fill"),
@@ -73,9 +74,17 @@ extension DemoListViewController: UITableViewDataSource, UITableViewDelegate {
         tableView.deselectRow(at: indexPath, animated: true)
         
         let item = demoItems[indexPath.row]
-        let detailVC = DemoDetailViewController(demoItem: item)
-        detailVC.hidesBottomBarWhenPushed = true
-        navigationController?.pushViewController(detailVC, animated: true)
+        
+        // 如果是Widget使用教程，直接跳转到教程页面
+        if item.title == "Widget使用教程" {
+            let tutorialVC = TutorialDetailViewController()
+            tutorialVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(tutorialVC, animated: true)
+        } else {
+            let detailVC = DemoDetailViewController(demoItem: item)
+            detailVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(detailVC, animated: true)
+        }
     }
 }
 

@@ -11,7 +11,9 @@
       "Bash(pod deintegrate:*)",
       "Bash(sudo xcodebuild:*)",
       "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/WidgetAddViewController.swift)",
-      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse /Users/apus/Desktop/源码仓库/Genesys/Genesys/WidgetAddViewController.swift)"
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse /Users/apus/Desktop/源码仓库/Genesys/Genesys/WidgetAddViewController.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/TutorialDetailViewController.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/DemoListViewController.swift)"
     ],
     "deny": [],
     "ask": []
