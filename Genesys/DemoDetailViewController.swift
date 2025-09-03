@@ -249,6 +249,21 @@ class DemoDetailViewController: UIViewController {
             Live Activity为正在进行的活动提供实时更新。
             """
             
+        case "工具面板演示":
+            return """
+            工具面板演示功能：
+            
+            1. 多功能工具集合界面
+            2. 网格布局工具按钮
+            3. 工具图标和标签展示
+            4. 点击交互和反馈效果
+            5. 分类工具组织方式
+            6. 自适应布局设计
+            7. 工具搜索和筛选
+            
+            这个演示展示了如何创建一个实用的工具面板界面，包含多种常用工具的快速访问。
+            """
+            
         case "高级Widget示例":
             return """
             高级Widget示例演示：
@@ -284,6 +299,10 @@ class DemoDetailViewController: UIViewController {
                 sheet.preferredCornerRadius = 20
             }
             present(widgetAddVC, animated: true)
+            
+        case "工具面板演示":
+            let toolPanelVC = ToolPanelViewController()
+            navigationController?.pushViewController(toolPanelVC, animated: true)
             
         case "高级Widget示例":
             let alert = UIAlertController(

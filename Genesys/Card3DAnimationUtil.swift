@@ -59,19 +59,34 @@ class Card3DAnimationUtil {
     /// - Parameters:
     ///   - view: 目标视图
     ///   - config: 动画配置 (默认为中大号卡片配置)
-    ///   - shadowConfig: 阴影配置
     ///   - animationKey: 动画标识符 (用于移除动画)
+    ///   - forceRestart: 是否强制重新开始动画 (默认false，如果动画已存在则不重新开始)
     static func startCornerRotation(
         for view: UIView,
         config: AnimationConfig = .default,
-        shadowConfig: ShadowConfig = .default,
-        animationKey: String = "cornerRotation"
+        animationKey: String = "cornerRotation",
+        forceRestart: Bool = false
     ) {
-        // 确保移除之前的动画
-        view.layer.removeAnimation(forKey: animationKey)
+        // 检查动画是否已经存在，如果存在且不强制重启，则直接返回
+        if !forceRestart && view.layer.animation(forKey: animationKey) != nil {
+            return
+        }
         
-        // 设置阴影属性
-        configureShadow(for: view, config: shadowConfig)
+        // 如果视图尚未完成布局，延迟启动动画
+        if view.frame.size.width == 0 || view.frame.size.height == 0 {
+            DispatchQueue.main.async {
+                startCornerRotation(for: view, config: config, animationKey: animationKey, forceRestart: forceRestart)
+            }
+            return
+        }
+        
+        // 只有在强制重启时才移除之前的动画
+        if forceRestart {
+            view.layer.removeAnimation(forKey: animationKey)
+        }
+        
+        // 设置透视效果，确保3D效果正确
+        setupPerspective(for: view, strength: config.perspectiveStrength)
         
         // 创建四角轮转动画
         let animation = createCornerRotationAnimation(config: config, baseTransform: view.layer.transform)
@@ -106,11 +121,11 @@ class Card3DAnimationUtil {
     
     /// 配置阴影效果
     private static func configureShadow(for view: UIView, config: ShadowConfig) {
-        view.layer.shadowColor = config.color
-        view.layer.shadowOffset = config.offset
-        view.layer.shadowRadius = config.radius
-        view.layer.shadowOpacity = config.opacity
-        view.layer.masksToBounds = false
+//        view.layer.shadowColor = config.color
+//        view.layer.shadowOffset = config.offset
+//        view.layer.shadowRadius = config.radius
+//        view.layer.shadowOpacity = config.opacity
+//        view.layer.masksToBounds = false
     }
     
     /// 创建四角轮转动画

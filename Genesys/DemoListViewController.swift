@@ -15,6 +15,7 @@ class DemoListViewController: UIViewController {
         DemoItem(title: "Timeline更新", description: "演示Widget的时间线更新机制", icon: "clock.fill"),
         DemoItem(title: "添加Widget弹窗", description: "演示Widget添加弹窗和配置界面", icon: "plus.circle.fill"),
         DemoItem(title: "Widget使用教程", description: "如何将小组件添加到主屏幕", icon: "questionmark.circle.fill"),
+        DemoItem(title: "工具面板演示", description: "展示多功能工具面板界面和交互效果", icon: "wrench.and.screwdriver.fill"),
         DemoItem(title: "动态内容", description: "显示动态变化的Widget内容", icon: "arrow.triangle.2.circlepath"),
         DemoItem(title: "网络数据", description: "从网络获取数据并显示在Widget中", icon: "network"),
         DemoItem(title: "深度链接", description: "Widget点击跳转到应用特定页面", icon: "link.circle.fill"),
