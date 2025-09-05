@@ -19,7 +19,7 @@ class Card3DAnimationUtil {
         /// 默认配置 - 适合中大号卡片
         static let `default` = AnimationConfig(
             angle: 0.25,
-            duration: 15.0,
+            duration: 20.0,
             totalFrames: 32,
             delayRange: 0.0...0.5,
             perspectiveStrength: 800.0
@@ -27,8 +27,8 @@ class Card3DAnimationUtil {
         
         /// 小号卡片配置 - 角度更大，动画更明显
         static let small = AnimationConfig(
-            angle: 0.4,
-            duration: 15.0,
+            angle: 0.3,
+            duration: 20.0,
             totalFrames: 32,
             delayRange: 0.0...0.5,
             perspectiveStrength: 800.0
@@ -92,7 +92,8 @@ class Card3DAnimationUtil {
         let animation = createCornerRotationAnimation(config: config, baseTransform: view.layer.transform)
         
         // 添加随机延迟，让多个动画不同步
-        let randomDelay = Double.random(in: config.delayRange)
+//        let randomDelay = Double.random(in: config.delayRange)
+        let randomDelay: CGFloat = .zero
         animation.beginTime = CACurrentMediaTime() + randomDelay
         
         // 开始动画
@@ -105,6 +106,30 @@ class Card3DAnimationUtil {
     ///   - animationKey: 动画标识符
     static func stopAnimation(for view: UIView, animationKey: String = "cornerRotation") {
         view.layer.removeAnimation(forKey: animationKey)
+    }
+    
+    /// 获取动画的第一帧transform（用于设置静态初始状态）
+    /// - Parameters:
+    ///   - config: 动画配置
+    ///   - baseTransform: 基础transform
+    /// - Returns: 动画第一帧的transform
+    static func getFirstFrameTransform(
+        config: AnimationConfig = .default,
+        baseTransform: CATransform3D = CATransform3DIdentity
+    ) -> CATransform3D {
+        // 计算第一帧的旋转角度（i=0时）
+        let progress: Float = 0
+        let circleProgress = progress * 2 * Float.pi
+        
+        let xRotation = sin(circleProgress * 2) * config.angle * 0.8
+        let yRotation = cos(circleProgress * 2) * config.angle * 0.8
+        
+        // 在基础transform基础上添加旋转
+        var transform = baseTransform
+        transform = CATransform3DRotate(transform, CGFloat(xRotation), 1.0, 0.0, 0.0)
+        transform = CATransform3DRotate(transform, CGFloat(yRotation), 0.0, 1.0, 0.0)
+        
+        return transform
     }
     
     /// 为视图设置3D透视效果
@@ -185,5 +210,16 @@ extension UIView {
     /// - Parameter strength: 透视强度
     func setupCard3DPerspective(strength: Float = 800.0) {
         Card3DAnimationUtil.setupPerspective(for: self, strength: strength)
+    }
+    
+    /// 设置为动画第一帧状态
+    /// - Parameter isSmallCard: 是否为小号卡片
+    func setToFirstFrameState(isSmallCard: Bool = false) {
+        let config = isSmallCard ? Card3DAnimationUtil.AnimationConfig.small : .default
+        let firstFrameTransform = Card3DAnimationUtil.getFirstFrameTransform(
+            config: config,
+            baseTransform: layer.transform
+        )
+        layer.transform = firstFrameTransform
     }
 }

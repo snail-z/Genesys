@@ -14,7 +14,9 @@
       "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse /Users/apus/Desktop/源码仓库/Genesys/Genesys/WidgetAddViewController.swift)",
       "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/TutorialDetailViewController.swift)",
       "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/DemoListViewController.swift)",
-      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/Card3DAnimationUtil.swift)"
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/Card3DAnimationUtil.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse /Users/apus/Desktop/源码仓库/Genesys/Genesys/WidgetAddViewCell.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse /Users/apus/Desktop/源码仓库/Genesys/Genesys/Card3DAnimationUtil.swift)"
     ],
     "deny": [],
     "ask": []
