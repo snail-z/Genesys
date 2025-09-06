@@ -10,7 +10,7 @@ class MainTabBarController: UITabBarController {
     
     private func setupTabs() {
         let demoListVC = DemoListViewController()
-        let demoNavController = UINavigationController(rootViewController: demoListVC)
+        let demoNavController = CustomNavigationController(rootViewController: demoListVC)
         demoNavController.tabBarItem = UITabBarItem(
             title: "Demo",
             image: UIImage(systemName: "list.bullet"),
@@ -18,7 +18,7 @@ class MainTabBarController: UITabBarController {
         )
         
         let secondVC = SecondViewController()
-        let secondNavController = UINavigationController(rootViewController: secondVC)
+        let secondNavController = CustomNavigationController(rootViewController: secondVC)
         secondNavController.tabBarItem = UITabBarItem(
             title: "第二页",
             image: UIImage(systemName: "square.grid.2x2"),

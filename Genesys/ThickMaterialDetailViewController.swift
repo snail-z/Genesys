@@ -10,11 +10,46 @@ class ThickMaterialDetailViewController: UIViewController {
     private let backgroundImageView = UIImageView()
     private let sampleContainer = UIView()
     
+    // 状态栏隐藏状态
+    private var shouldHideStatusBar = false
+    
+    // 控制状态栏隐藏
+    override var prefersStatusBarHidden: Bool {
+        return shouldHideStatusBar
+    }
+    
+    // 状态栏隐藏动画 - 使用淡入淡出效果
+    override var preferredStatusBarUpdateAnimation: UIStatusBarAnimation {
+        return .fade
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         setupNavigationBar()
         createThickMaterialExamples()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        // 延迟隐藏状态栏，创建更平滑的过渡效果
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+            self?.shouldHideStatusBar = true
+            UIView.animate(withDuration: 0.5, delay: 0, options: [.curveEaseInOut]) {
+                self?.setNeedsStatusBarAppearanceUpdate()
+            }
+        }
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        // 提前显示状态栏，确保返回时状态栏已经可见
+        shouldHideStatusBar = false
+        UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseOut]) {
+            self.setNeedsStatusBarAppearanceUpdate()
+        }
     }
     
     private func setupNavigationBar() {
