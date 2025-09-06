@@ -12,6 +12,7 @@ class DemoListViewController: UIViewController {
     
     private let demoItems: [DemoItem] = [
         DemoItem(title: "Widget基础示例", description: "展示基础Widget的创建和配置", icon: "square.fill"),
+        DemoItem(title: "透明组件演示", description: "展示透明背景和半透明效果的组件实现", icon: "circle.dashed"),
         DemoItem(title: "Timeline更新", description: "演示Widget的时间线更新机制", icon: "clock.fill"),
         DemoItem(title: "添加Widget弹窗", description: "演示Widget添加弹窗和配置界面", icon: "plus.circle.fill"),
         DemoItem(title: "Widget使用教程", description: "如何将小组件添加到主屏幕", icon: "questionmark.circle.fill"),

@@ -142,6 +142,22 @@ class DemoDetailViewController: UIViewController {
             Widget是iOS 14引入的功能，允许应用在主屏幕和今日视图中显示实时信息。
             """
             
+        case "透明组件演示":
+            return """
+            透明组件演示功能：
+            
+            1. 透明背景视图的创建和配置
+            2. 半透明效果的实现技巧
+            3. 毛玻璃效果（UIVisualEffectView）的使用
+            4. 透明度渐变动画效果
+            5. 背景模糊和色彩叠加
+            6. 透明组件的层级管理
+            7. 不同透明度级别的视觉对比
+            8. 透明组件与用户交互的处理
+            
+            这个演示展示了iOS中各种透明效果的实现方法，包括完全透明、半透明、毛玻璃效果等。
+            """
+            
         case "Timeline更新":
             return """
             Timeline更新机制演示：
@@ -286,6 +302,10 @@ class DemoDetailViewController: UIViewController {
     
     @objc private func runDemoTapped() {
         switch demoItem.title {
+        case "透明组件演示":
+            let transparentVC = TransparentComponentViewController()
+            navigationController?.pushViewController(transparentVC, animated: true)
+            
         case "日历Widget":
             let calendarVC = CalendarViewController()
             navigationController?.pushViewController(calendarVC, animated: true)
