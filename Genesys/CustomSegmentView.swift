@@ -45,11 +45,17 @@ class CustomSegmentView: UIView {
     // 动画相关
     private var indicatorWidthConstraint: NSLayoutConstraint!
     private var indicatorCenterXConstraint: NSLayoutConstraint!
+    private var indicatorHeightConstraint: NSLayoutConstraint!
+    private var containerHeightConstraint: NSLayoutConstraint!
     
-    // 设计参数
-    private let containerHeight: CGFloat = 60
-    private let indicatorInset: CGFloat = 4
-    private let cornerRadius: CGFloat = 30
+    // 设计参数（对外可自定义）
+    public var containerHeight: CGFloat = 60 { didSet { containerHeightConstraint?.constant = containerHeight; setNeedsLayout() } }
+    public var indicatorInset: CGFloat = 4 { didSet { indicatorHeightConstraint?.constant = containerHeight - indicatorInset * 2; setNeedsLayout() } }
+    public var cornerRadius: CGFloat = 30 { didSet { containerView.layer.cornerRadius = cornerRadius } }
+    public var segmentSpacing: CGFloat = 0 { didSet { segmentStackView?.spacing = segmentSpacing; selectedStackView?.spacing = segmentSpacing; setNeedsLayout() } }
+    // 弹性动画（系统 spring 动画参数，越接近 1.0 弹性越小）
+    public var springDamping: CGFloat = 0.72
+    public var springInitialVelocity: CGFloat = 0.4
     
     // MARK: - 初始化
     init(items: [SegmentItem]) {
@@ -89,7 +95,7 @@ class CustomSegmentView: UIView {
         segmentStackView.axis = .horizontal
         segmentStackView.distribution = .fillEqually
         segmentStackView.alignment = .center
-        segmentStackView.spacing = 0
+        segmentStackView.spacing = segmentSpacing
         segmentStackView.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(segmentStackView)
         
@@ -101,7 +107,7 @@ class CustomSegmentView: UIView {
         selectedStackView.axis = .horizontal
         selectedStackView.distribution = .fillEqually
         selectedStackView.alignment = .center
-        selectedStackView.spacing = 0
+        selectedStackView.spacing = segmentSpacing
         selectedStackView.translatesAutoresizingMaskIntoConstraints = false
         selectedStackView.isUserInteractionEnabled = false
         selectedOverlayView.addSubview(selectedStackView)
@@ -159,23 +165,27 @@ class CustomSegmentView: UIView {
     }
     
     private func setupConstraints() {
-        // 计算指示器宽度（左右各预留 inset）
-        let indicatorWidth = bounds.width > 0 ? bounds.width / CGFloat(items.count) - indicatorInset * 2 : 100
+        // 计算指示器宽度（考虑分段间距，左右各预留 inset）
+        let totalSpacing = segmentSpacing * CGFloat(max(0, items.count - 1))
+        let baseSegmentWidth = bounds.width > 0 ? (bounds.width - totalSpacing) / CGFloat(items.count) : 0
+        let indicatorWidth = bounds.width > 0 ? max(0, baseSegmentWidth - indicatorInset * 2) : 100
         
         indicatorWidthConstraint = selectionIndicator.widthAnchor.constraint(equalToConstant: indicatorWidth)
         indicatorCenterXConstraint = selectionIndicator.centerXAnchor.constraint(equalTo: containerView.leadingAnchor, constant: indicatorWidth / 2 + indicatorInset)
-        
+        containerHeightConstraint = containerView.heightAnchor.constraint(equalToConstant: containerHeight)
+        indicatorHeightConstraint = selectionIndicator.heightAnchor.constraint(equalToConstant: containerHeight - indicatorInset * 2)
+
         NSLayoutConstraint.activate([
             // 容器约束
             containerView.topAnchor.constraint(equalTo: topAnchor),
             containerView.leadingAnchor.constraint(equalTo: leadingAnchor),
             containerView.trailingAnchor.constraint(equalTo: trailingAnchor),
             containerView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            containerView.heightAnchor.constraint(equalToConstant: containerHeight),
+            containerHeightConstraint,
             
             // 指示器约束
             selectionIndicator.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-            selectionIndicator.heightAnchor.constraint(equalToConstant: containerHeight - indicatorInset * 2),
+            indicatorHeightConstraint,
             indicatorWidthConstraint,
             indicatorCenterXConstraint,
             
@@ -211,16 +221,20 @@ class CustomSegmentView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         updateIndicatorConstraints()
+        // 动态同步圆角
+        selectionIndicator.layer.cornerRadius = selectionIndicator.bounds.height / 2
         updateMaskPathToIndicator()
     }
     
     private func updateIndicatorConstraints() {
         guard bounds.width > 0, !items.isEmpty else { return }
-        
-        let segmentWidth = bounds.width / CGFloat(items.count)
-        let newWidth = segmentWidth - indicatorInset * 2
-        let newCenterX = segmentWidth * CGFloat(selectedIndex) + segmentWidth / 2
-        
+
+        let totalSpacing = segmentSpacing * CGFloat(max(0, items.count - 1))
+        let segmentWidth = (bounds.width - totalSpacing) / CGFloat(items.count)
+        let unit = segmentWidth + segmentSpacing
+        let newWidth = max(0, segmentWidth - indicatorInset * 2)
+        let newCenterX = unit * CGFloat(selectedIndex) + segmentWidth / 2
+
         indicatorWidthConstraint.constant = newWidth
         indicatorCenterXConstraint.constant = newCenterX
     }
@@ -246,19 +260,22 @@ class CustomSegmentView: UIView {
         // 提供触觉反馈
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
+        // 仅系统回弹：拖动开始不做额外缩放
     }
     
     private func handlePanChanged(_ gesture: UIPanGestureRecognizer) {
         let currentLocation = gesture.location(in: self)
         let deltaX = currentLocation.x - initialPanLocation.x
         
-        // 计算新的指示器位置
+        // 计算新的指示器位置（考虑 segmentSpacing）
         var newCenterX = initialIndicatorCenter.x + deltaX
-        let segmentWidth = bounds.width / CGFloat(items.count)
+        let totalSpacing = segmentSpacing * CGFloat(max(0, items.count - 1))
+        let segmentWidth = (bounds.width - totalSpacing) / CGFloat(items.count)
+        let unit = segmentWidth + segmentSpacing
         
         // 限制指示器在有效范围内
         let minX = segmentWidth / 2
-        let maxX = bounds.width - segmentWidth / 2
+        let maxX = unit * CGFloat(items.count - 1) + segmentWidth / 2
         newCenterX = max(minX, min(maxX, newCenterX))
         
         // 更新指示器位置
@@ -271,9 +288,11 @@ class CustomSegmentView: UIView {
         let velocity = gesture.velocity(in: self)
         let currentLocation = gesture.location(in: self)
         
-        // 计算应该选中的索引
-        let segmentWidth = bounds.width / CGFloat(items.count)
-        var targetIndex = Int(currentLocation.x / segmentWidth)
+        // 计算应该选中的索引（考虑 segmentSpacing）
+        let totalSpacing = segmentSpacing * CGFloat(max(0, items.count - 1))
+        let segmentWidth = (bounds.width - totalSpacing) / CGFloat(items.count)
+        let unit = segmentWidth + segmentSpacing
+        var targetIndex = Int(currentLocation.x / unit)
         
         // 考虑滑动速度
         if abs(velocity.x) > 500 {
@@ -299,7 +318,8 @@ class CustomSegmentView: UIView {
             // 如果没有变化，动画回到原位置
             updateSelection(animated: true)
         }
-    }
+
+        }
     
     // MARK: - 点击处理
     @objc private func segmentTapped(_ sender: UIButton) {
@@ -312,6 +332,7 @@ class CustomSegmentView: UIView {
         // 提供触觉反馈
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
         impactFeedback.impactOccurred()
+        // 仅系统回弹：轻点不做额外缩放
     }
     
     // MARK: - 选择更新
@@ -321,12 +342,26 @@ class CustomSegmentView: UIView {
     
     private func updateSelection(animated: Bool) {
         guard !items.isEmpty, selectedIndex >= 0, selectedIndex < items.count else { return }
-        
-        let duration: TimeInterval = animated ? 0.3 : 0
-        
+
+        // 计算目标位置（考虑分段间距与 inset），用于动态设置动画时长和初速度
+        let totalSpacing = segmentSpacing * CGFloat(max(0, items.count - 1))
+        let segmentWidth = (bounds.width - totalSpacing) / CGFloat(items.count)
+        let unit = segmentWidth + segmentSpacing
+        let targetCenterX = unit * CGFloat(selectedIndex) + segmentWidth / 2
+        let targetWidth = max(0, segmentWidth - indicatorInset * 2)
+        let currentCenterX = indicatorCenterXConstraint.constant
+        let delta = abs(targetCenterX - currentCenterX)
+        let distanceNorm = segmentWidth > 0 ? min(1.0, delta / (segmentWidth * 1.5)) : 0
+
+        // 动态时长与初速度：距离越大，越明显；保证从 A→B、B→A 都有可见 spring
+        let baseDuration: TimeInterval = 0.32
+        let duration = animated ? baseDuration + 0.18 * TimeInterval(distanceNorm) : 0
+        let iv = animated ? max(0.0, min(1.6, springInitialVelocity + 0.6 * distanceNorm)) : 0
+
         if animated { startMaskTrackingDisplayLink() }
-        UIView.animate(withDuration: duration, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut]) {
-            self.updateIndicatorConstraints()
+        UIView.animate(withDuration: duration, delay: 0, usingSpringWithDamping: springDamping, initialSpringVelocity: iv, options: [.curveEaseInOut, .allowUserInteraction, .beginFromCurrentState]) {
+            self.indicatorWidthConstraint.constant = targetWidth
+            self.indicatorCenterXConstraint.constant = targetCenterX
             self.updateSegmentColors()
             self.layoutIfNeeded()
         } completion: { _ in
@@ -334,6 +369,9 @@ class CustomSegmentView: UIView {
             self.updateMaskPathToIndicator()
         }
     }
+
+    // MARK: - 弹性动画
+    // 使用系统 spring（由 updateSelection 驱动），不做额外缩放/关键帧，避免抖动
     
     private func updateSegmentColors() {
         // 正常层始终保持默认色（白色），选中色由覆盖层 + mask 决定。
@@ -346,7 +384,11 @@ class CustomSegmentView: UIView {
                 iconImageView.tintColor = .white
                 titleLabel.textColor = .white
             }
-            button.accessibilityTraits = isSelected ? (button.accessibilityTraits.union(.selected)) : (button.accessibilityTraits.subtracting(.selected))
+            if isSelected {
+                button.accessibilityTraits.insert(.selected)
+            } else {
+                button.accessibilityTraits.remove(.selected)
+            }
         }
     }
     
@@ -376,7 +418,7 @@ class CustomSegmentView: UIView {
         segmentStackView.axis = .horizontal
         segmentStackView.distribution = .fillEqually
         segmentStackView.alignment = .center
-        segmentStackView.spacing = 0
+        segmentStackView.spacing = segmentSpacing
         segmentStackView.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(segmentStackView)
         
@@ -386,7 +428,7 @@ class CustomSegmentView: UIView {
         selectedStackView.axis = .horizontal
         selectedStackView.distribution = .fillEqually
         selectedStackView.alignment = .center
-        selectedStackView.spacing = 0
+        selectedStackView.spacing = segmentSpacing
         selectedStackView.translatesAutoresizingMaskIntoConstraints = false
         selectedStackView.isUserInteractionEnabled = false
         selectedOverlayView.addSubview(selectedStackView)
@@ -473,8 +515,7 @@ class CustomSegmentView: UIView {
     @objc private func maskAnimationTick() {
         // 使用 presentation layer 的 frame 来平滑跟随动画中的指示器
         if let pres = selectionIndicator.layer.presentation() {
-            let frameInContainer = pres.frame
-            let frameInOverlay = containerView.convert(frameInContainer, to: selectedOverlayView)
+            let frameInOverlay = containerView.convert(pres.frame, to: selectedOverlayView)
             let path = UIBezierPath(roundedRect: frameInOverlay, cornerRadius: frameInOverlay.height / 2)
             maskLayer.frame = selectedOverlayView.bounds
             maskLayer.path = path.cgPath
