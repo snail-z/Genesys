@@ -29,8 +29,13 @@ class CustomSegmentView: UIView {
     private var items: [SegmentItem] = []
     private let containerView = UIView()
     private let selectionIndicator = UIView()
-    private var segmentButtons: [UIButton] = []
-    private var segmentStackView: UIStackView!
+    private var segmentButtons: [UIButton] = []            // 正常色按钮
+    private var segmentStackView: UIStackView!             // 正常色容器
+    // 选中色覆盖层（使用 mask 实现“框内为选中色，框外为默认色”）
+    private let selectedOverlayView = UIView()
+    private var selectedStackView: UIStackView!            // 选中色容器（不接收事件）
+    private let maskLayer = CAShapeLayer()
+    private var displayLink: CADisplayLink?
     
     // 手势识别
     private var panGesture: UIPanGestureRecognizer!
@@ -79,7 +84,7 @@ class CustomSegmentView: UIView {
         // 创建分段按钮
         createSegmentButtons()
         
-        // 创建堆栈视图
+        // 创建堆栈视图（正常色）
         segmentStackView = UIStackView(arrangedSubviews: segmentButtons)
         segmentStackView.axis = .horizontal
         segmentStackView.distribution = .fillEqually
@@ -87,6 +92,20 @@ class CustomSegmentView: UIView {
         segmentStackView.spacing = 0
         segmentStackView.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(segmentStackView)
+        
+        // 创建选中色覆盖层及其堆栈：与正常层同结构，但图标/文字使用选中色；通过 mask 显示“指示框内”的部分
+        selectedOverlayView.translatesAutoresizingMaskIntoConstraints = false
+        selectedOverlayView.isUserInteractionEnabled = false
+        containerView.addSubview(selectedOverlayView)
+        selectedStackView = UIStackView(arrangedSubviews: createSelectedOverlayItems())
+        selectedStackView.axis = .horizontal
+        selectedStackView.distribution = .fillEqually
+        selectedStackView.alignment = .center
+        selectedStackView.spacing = 0
+        selectedStackView.translatesAutoresizingMaskIntoConstraints = false
+        selectedStackView.isUserInteractionEnabled = false
+        selectedOverlayView.addSubview(selectedStackView)
+        selectedOverlayView.layer.mask = maskLayer
         
         setupConstraints()
     }
@@ -140,8 +159,8 @@ class CustomSegmentView: UIView {
     }
     
     private func setupConstraints() {
-        // 计算指示器宽度
-        let indicatorWidth = bounds.width > 0 ? bounds.width / CGFloat(items.count) - indicatorInset : 100
+        // 计算指示器宽度（左右各预留 inset）
+        let indicatorWidth = bounds.width > 0 ? bounds.width / CGFloat(items.count) - indicatorInset * 2 : 100
         
         indicatorWidthConstraint = selectionIndicator.widthAnchor.constraint(equalToConstant: indicatorWidth)
         indicatorCenterXConstraint = selectionIndicator.centerXAnchor.constraint(equalTo: containerView.leadingAnchor, constant: indicatorWidth / 2 + indicatorInset)
@@ -166,6 +185,19 @@ class CustomSegmentView: UIView {
             segmentStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
             segmentStackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
         ])
+        
+        // 选中色覆盖层与容器填充
+        NSLayoutConstraint.activate([
+            selectedOverlayView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            selectedOverlayView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            selectedOverlayView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            selectedOverlayView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+            
+            selectedStackView.topAnchor.constraint(equalTo: selectedOverlayView.topAnchor),
+            selectedStackView.leadingAnchor.constraint(equalTo: selectedOverlayView.leadingAnchor),
+            selectedStackView.trailingAnchor.constraint(equalTo: selectedOverlayView.trailingAnchor),
+            selectedStackView.bottomAnchor.constraint(equalTo: selectedOverlayView.bottomAnchor)
+        ])
     }
     
     // MARK: - 手势设置
@@ -179,13 +211,14 @@ class CustomSegmentView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         updateIndicatorConstraints()
+        updateMaskPathToIndicator()
     }
     
     private func updateIndicatorConstraints() {
         guard bounds.width > 0, !items.isEmpty else { return }
         
         let segmentWidth = bounds.width / CGFloat(items.count)
-        let newWidth = segmentWidth - indicatorInset
+        let newWidth = segmentWidth - indicatorInset * 2
         let newCenterX = segmentWidth * CGFloat(selectedIndex) + segmentWidth / 2
         
         indicatorWidthConstraint.constant = newWidth
@@ -231,6 +264,7 @@ class CustomSegmentView: UIView {
         // 更新指示器位置
         indicatorCenterXConstraint.constant = newCenterX
         layoutIfNeeded()
+        updateMaskPathToIndicator()
     }
     
     private func handlePanEnded(_ gesture: UIPanGestureRecognizer) {
@@ -290,29 +324,29 @@ class CustomSegmentView: UIView {
         
         let duration: TimeInterval = animated ? 0.3 : 0
         
+        if animated { startMaskTrackingDisplayLink() }
         UIView.animate(withDuration: duration, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0.5, options: [.curveEaseInOut]) {
             self.updateIndicatorConstraints()
             self.updateSegmentColors()
             self.layoutIfNeeded()
+        } completion: { _ in
+            self.stopMaskTrackingDisplayLink()
+            self.updateMaskPathToIndicator()
         }
     }
     
     private func updateSegmentColors() {
+        // 正常层始终保持默认色（白色），选中色由覆盖层 + mask 决定。
+        // 仅维护可访问性 selected trait
         for (index, button) in segmentButtons.enumerated() {
             let isSelected = index == selectedIndex
-            let color: UIColor = isSelected ? .systemBlue : .white
-            
-            // 更新图标颜色
             if let stackView = button.subviews.first as? UIStackView,
-               let iconImageView = stackView.arrangedSubviews.first as? UIImageView {
-                iconImageView.tintColor = color
-            }
-            
-            // 更新文字颜色
-            if let stackView = button.subviews.first as? UIStackView,
+               let iconImageView = stackView.arrangedSubviews.first as? UIImageView,
                let titleLabel = stackView.arrangedSubviews.last as? UILabel {
-                titleLabel.textColor = color
+                iconImageView.tintColor = .white
+                titleLabel.textColor = .white
             }
+            button.accessibilityTraits = isSelected ? (button.accessibilityTraits.union(.selected)) : (button.accessibilityTraits.subtracting(.selected))
         }
     }
     
@@ -331,6 +365,10 @@ class CustomSegmentView: UIView {
         // 清除旧的按钮
         segmentButtons.forEach { $0.removeFromSuperview() }
         segmentStackView.removeFromSuperview()
+        // 清除旧的覆盖层
+        selectedStackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        selectedStackView.removeFromSuperview()
+        selectedOverlayView.removeFromSuperview()
         
         // 创建新的按钮和布局
         createSegmentButtons()
@@ -342,6 +380,18 @@ class CustomSegmentView: UIView {
         segmentStackView.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(segmentStackView)
         
+        // 重建选中色覆盖层
+        containerView.addSubview(selectedOverlayView)
+        selectedStackView = UIStackView(arrangedSubviews: createSelectedOverlayItems())
+        selectedStackView.axis = .horizontal
+        selectedStackView.distribution = .fillEqually
+        selectedStackView.alignment = .center
+        selectedStackView.spacing = 0
+        selectedStackView.translatesAutoresizingMaskIntoConstraints = false
+        selectedStackView.isUserInteractionEnabled = false
+        selectedOverlayView.addSubview(selectedStackView)
+        selectedOverlayView.layer.mask = maskLayer
+        
         // 重新设置约束
         NSLayoutConstraint.activate([
             segmentStackView.topAnchor.constraint(equalTo: containerView.topAnchor),
@@ -349,10 +399,88 @@ class CustomSegmentView: UIView {
             segmentStackView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
             segmentStackView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
         ])
+        NSLayoutConstraint.activate([
+            selectedOverlayView.topAnchor.constraint(equalTo: containerView.topAnchor),
+            selectedOverlayView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            selectedOverlayView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            selectedOverlayView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+            
+            selectedStackView.topAnchor.constraint(equalTo: selectedOverlayView.topAnchor),
+            selectedStackView.leadingAnchor.constraint(equalTo: selectedOverlayView.leadingAnchor),
+            selectedStackView.trailingAnchor.constraint(equalTo: selectedOverlayView.trailingAnchor),
+            selectedStackView.bottomAnchor.constraint(equalTo: selectedOverlayView.bottomAnchor)
+        ])
         
         // 重置选中状态
         selectedIndex = 0
         updateSelection(animated: false)
+    }
+
+    // MARK: - 选中色覆盖层生成
+    private func createSelectedOverlayItems() -> [UIView] {
+        // 与 createSegmentButton 的内部布局一致，但不使用 UIButton，不接收事件
+        return items.map { item in
+            let container = UIView()
+            container.isUserInteractionEnabled = false
+            let iconImageView = UIImageView()
+            iconImageView.image = UIImage(systemName: item.icon)
+            iconImageView.contentMode = .scaleAspectFit
+            iconImageView.tintColor = .systemBlue // 与选中色保持一致
+            iconImageView.translatesAutoresizingMaskIntoConstraints = false
+            
+            let titleLabel = UILabel()
+            titleLabel.text = item.title
+            titleLabel.font = .systemFont(ofSize: 12, weight: .medium)
+            titleLabel.textColor = .systemBlue
+            titleLabel.textAlignment = .center
+            titleLabel.translatesAutoresizingMaskIntoConstraints = false
+            
+            let stackView = UIStackView(arrangedSubviews: [iconImageView, titleLabel])
+            stackView.axis = .vertical
+            stackView.alignment = .center
+            stackView.spacing = 4
+            stackView.translatesAutoresizingMaskIntoConstraints = false
+            stackView.isUserInteractionEnabled = false
+            
+            container.addSubview(stackView)
+            NSLayoutConstraint.activate([
+                stackView.centerXAnchor.constraint(equalTo: container.centerXAnchor),
+                stackView.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+                iconImageView.widthAnchor.constraint(equalToConstant: 20),
+                iconImageView.heightAnchor.constraint(equalToConstant: 20)
+            ])
+            return container
+        }
+    }
+
+    // 更新 mask 路径为当前指示器的圆角矩形（在 overlay 坐标系）
+    private func updateMaskPathToIndicator() {
+        let rect = selectionIndicator.convert(selectionIndicator.bounds, to: selectedOverlayView)
+        let path = UIBezierPath(roundedRect: rect, cornerRadius: rect.height / 2)
+        maskLayer.frame = selectedOverlayView.bounds
+        maskLayer.path = path.cgPath
+    }
+
+    private func startMaskTrackingDisplayLink() {
+        stopMaskTrackingDisplayLink()
+        displayLink = CADisplayLink(target: self, selector: #selector(maskAnimationTick))
+        displayLink?.add(to: .main, forMode: .common)
+    }
+    private func stopMaskTrackingDisplayLink() {
+        displayLink?.invalidate()
+        displayLink = nil
+    }
+    @objc private func maskAnimationTick() {
+        // 使用 presentation layer 的 frame 来平滑跟随动画中的指示器
+        if let pres = selectionIndicator.layer.presentation() {
+            let frameInContainer = pres.frame
+            let frameInOverlay = containerView.convert(frameInContainer, to: selectedOverlayView)
+            let path = UIBezierPath(roundedRect: frameInOverlay, cornerRadius: frameInOverlay.height / 2)
+            maskLayer.frame = selectedOverlayView.bounds
+            maskLayer.path = path.cgPath
+        } else {
+            updateMaskPathToIndicator()
+        }
     }
 }
 
