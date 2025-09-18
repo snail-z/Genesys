@@ -13,9 +13,11 @@ class DemoListViewController: UIViewController {
     private let demoItems: [DemoItem] = [
         DemoItem(title: "Widget基础示例", description: "展示基础Widget的创建和配置", icon: "square.fill"),
         DemoItem(title: "透明组件演示", description: "展示透明背景和半透明效果的组件实现", icon: "circle.dashed"),
+        DemoItem(title: "清晰小日历组件", description: "多种日历小组件样式展示", icon: "calendar.circle.fill"),
         DemoItem(title: "Timeline更新", description: "演示Widget的时间线更新机制", icon: "clock.fill"),
         DemoItem(title: "添加Widget弹窗", description: "演示Widget添加弹窗和配置界面", icon: "plus.circle.fill"),
         DemoItem(title: "Widget使用教程", description: "如何将小组件添加到主屏幕", icon: "questionmark.circle.fill"),
+        DemoItem(title: "日历助手", description: "展示现代化日历界面和日程管理功能", icon: "calendar.badge.plus"),
         DemoItem(title: "工具面板演示", description: "展示多功能工具面板界面和交互效果", icon: "wrench.and.screwdriver.fill"),
         DemoItem(title: "动态内容", description: "显示动态变化的Widget内容", icon: "arrow.triangle.2.circlepath"),
         DemoItem(title: "网络数据", description: "从网络获取数据并显示在Widget中", icon: "network"),
@@ -23,7 +25,8 @@ class DemoListViewController: UIViewController {
         DemoItem(title: "多尺寸适配", description: "适配不同尺寸的Widget布局", icon: "rectangle.3.group.fill"),
         DemoItem(title: "日历Widget", description: "显示日历和日程安排的Widget示例", icon: "calendar"),
         DemoItem(title: "Live Activity", description: "实时活动展示示例", icon: "bolt.circle.fill"),
-        DemoItem(title: "高级Widget示例", description: "展示复杂Widget功能和交互", icon: "star.circle.fill")
+        DemoItem(title: "高级Widget示例", description: "展示复杂Widget功能和交互", icon: "star.circle.fill"),
+        DemoItem(title: "自定义segmentView", description: "展示自定义分段控制器的样式和交互效果", icon: "square.split.2x1.fill")
     ]
     
     override func viewDidLoad() {
@@ -82,6 +85,10 @@ extension DemoListViewController: UITableViewDataSource, UITableViewDelegate {
             let tutorialVC = TutorialDetailViewController()
             tutorialVC.hidesBottomBarWhenPushed = true
             navigationController?.pushViewController(tutorialVC, animated: true)
+        } else if item.title == "日历助手" {
+            let calendarVC = CalendarGridViewController()
+            calendarVC.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(calendarVC, animated: true)
         } else {
             let detailVC = DemoDetailViewController(demoItem: item)
             detailVC.hidesBottomBarWhenPushed = true

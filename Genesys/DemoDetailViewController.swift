@@ -158,6 +158,25 @@ class DemoDetailViewController: UIViewController {
             这个演示展示了iOS中各种透明效果的实现方法，包括完全透明、半透明、毛玻璃效果等。
             """
             
+        case "清晰小日历组件":
+            return """
+            清晰小日历组件功能演示：
+            
+            1. 多种日历组件样式展示
+            2. 简约月视图日历组件
+            3. 紧凑周视图日历组件
+            4. 数字时钟风格日历
+            5. 卡片式日历组件
+            6. 带事件指示的日历
+            7. 透明背景日历组件
+            8. 动态颜色主题切换
+            9. 自定义字体和尺寸
+            10. 响应式布局适配
+            
+            这个演示展示了多种精美的小日历组件设计，适用于不同的应用场景和设计风格。
+            每个组件都具有清晰的视觉效果和良好的用户体验。
+            """
+            
         case "Timeline更新":
             return """
             Timeline更新机制演示：
@@ -295,6 +314,25 @@ class DemoDetailViewController: UIViewController {
             这个演示展示了Widget开发中的高级技术和最佳实践。
             """
             
+        case "自定义segmentView":
+            return """
+            自定义segmentView演示功能：
+            
+            1. 自定义分段控制器样式设计
+            2. 流畅的切换动画效果
+            3. 可定制的选中状态指示器
+            4. 支持多种颜色主题
+            5. 可配置的段数和标题
+            6. 响应式布局适配
+            7. 手势交互优化
+            8. 状态管理和回调处理
+            9. 无障碍功能支持
+            10. 性能优化实现
+            
+            这个演示展示了如何创建一个功能完善的自定义分段控制器，
+            提供比系统UISegmentedControl更丰富的视觉效果和交互体验。
+            """
+            
         default:
             return "这是一个Widget演示示例，展示了Widget开发的各种技术和最佳实践。"
         }
@@ -305,6 +343,10 @@ class DemoDetailViewController: UIViewController {
         case "透明组件演示":
             let transparentVC = TransparentComponentViewController()
             navigationController?.pushViewController(transparentVC, animated: true)
+            
+        case "清晰小日历组件":
+            let calendarGridVC = CalendarGridViewController()
+            navigationController?.pushViewController(calendarGridVC, animated: true)
             
         case "日历Widget":
             let calendarVC = CalendarViewController()
@@ -342,6 +384,10 @@ class DemoDetailViewController: UIViewController {
             })
             alert.addAction(UIAlertAction(title: "取消", style: .cancel))
             present(alert, animated: true)
+            
+        case "自定义segmentView":
+            let customSegmentDemoVC = CustomSegmentDemoViewController()
+            navigationController?.pushViewController(customSegmentDemoVC, animated: true)
             
         default:
             let alert = UIAlertController(

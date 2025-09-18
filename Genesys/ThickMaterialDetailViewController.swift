@@ -34,7 +34,7 @@ class ThickMaterialDetailViewController: UIViewController {
         super.viewWillAppear(animated)
         
         // 延迟隐藏状态栏，创建更平滑的过渡效果
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.01) { [weak self] in
             self?.shouldHideStatusBar = true
             UIView.animate(withDuration: 0.5, delay: 0, options: [.curveEaseInOut]) {
                 self?.setNeedsStatusBarAppearanceUpdate()
