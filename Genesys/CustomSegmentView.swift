@@ -1,32 +1,47 @@
 import UIKit
 
-// MARK: - 数据模型
-struct SegmentItem {
-    let title: String
-    let icon: String
-    let id: String
-    
-    init(title: String, icon: String, id: String? = nil) {
+// MARK: - 数据模型（外部可直接使用）
+/// 分段项模型（默认以 title 做 id，可自定义）
+public struct SegmentItem: Equatable, Hashable {
+    public let title: String
+    public let icon: String
+    public let id: String
+
+    public init(title: String, icon: String, id: String? = nil) {
         self.title = title
         self.icon = icon
         self.id = id ?? title
     }
 }
 
-// MARK: - 自定义分段控制器
-class CustomSegmentView: UIView {
+// MARK: - 样式配置（对外暴露，便于主题化）
+public struct SegmentStyle {
+    public var backgroundColor: UIColor = UIColor.black.withAlphaComponent(0.8)
+    public var indicatorColor: UIColor = UIColor.white.withAlphaComponent(0.15)
+    public var normalForegroundColor: UIColor = .white
+    public var selectedForegroundColor: UIColor = .systemBlue
+    public var font: UIFont = .systemFont(ofSize: 12, weight: .medium)
+    public var iconSize: CGSize = CGSize(width: 20, height: 20)
+    public var contentSpacing: CGFloat = 4
+
+    public init() { }
+}
+
+// MARK: - 自定义分段控制器（对外主控件）
+public final class CustomSegmentView: UIControl {
     
     // MARK: - 公开属性
-    var selectedIndex: Int = 0 {
+    /// 当前选中索引（设置后自动触发动画与回调）
+    public var selectedIndex: Int = 0 {
         didSet {
             updateSelection(animated: true)
         }
     }
-    
-    var onSelectionChanged: ((Int, SegmentItem) -> Void)?
+    /// 选择变化回调（可选），同时会发送 UIControl.Event.valueChanged
+    public var onSelectionChanged: ((Int, SegmentItem) -> Void)?
     
     // MARK: - 私有属性
-    private var items: [SegmentItem] = []
+    private(set) var items: [SegmentItem] = []
     private let containerView = UIView()
     private let selectionIndicator = UIView()
     private var segmentButtons: [UIButton] = []            // 正常色按钮
@@ -56,9 +71,12 @@ class CustomSegmentView: UIView {
     // 弹性动画（系统 spring 动画参数，越接近 1.0 弹性越小）
     public var springDamping: CGFloat = 0.72
     public var springInitialVelocity: CGFloat = 0.4
+
+    /// 主题样式（外部可整体替换）
+    public var style: SegmentStyle = .init() { didSet { applyStyle() } }
     
     // MARK: - 初始化
-    init(items: [SegmentItem]) {
+    public init(items: [SegmentItem]) {
         super.init(frame: .zero)
         self.items = items
         setupUI()
@@ -75,14 +93,14 @@ class CustomSegmentView: UIView {
         backgroundColor = .clear
         
         // 容器视图
-        containerView.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        containerView.backgroundColor = style.backgroundColor
         containerView.layer.cornerRadius = cornerRadius
         containerView.clipsToBounds = true
         containerView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(containerView)
         
         // 选中指示器
-        selectionIndicator.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        selectionIndicator.backgroundColor = style.indicatorColor
         selectionIndicator.layer.cornerRadius = (containerHeight - indicatorInset * 2) / 2
         selectionIndicator.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(selectionIndicator)
@@ -115,6 +133,39 @@ class CustomSegmentView: UIView {
         
         setupConstraints()
     }
+
+    // 当前选中 id（若有）
+    private func onSafeCurrentId() -> String? {
+        guard items.indices.contains(selectedIndex) else { return nil }
+        return items[selectedIndex].id
+    }
+
+    // 应用样式到现有子视图
+    private func applyStyle() {
+        containerView.backgroundColor = style.backgroundColor
+        selectionIndicator.backgroundColor = style.indicatorColor
+        // 正常层颜色/字体
+        segmentButtons.forEach { btn in
+            if let stack = btn.subviews.first as? UIStackView,
+               let icon = stack.arrangedSubviews.first as? UIImageView,
+               let lab = stack.arrangedSubviews.last as? UILabel {
+                icon.tintColor = style.normalForegroundColor
+                lab.textColor = style.normalForegroundColor
+                lab.font = style.font
+            }
+        }
+        // 选中色层
+        selectedStackView?.arrangedSubviews.forEach { v in
+            if let stack = v.subviews.first as? UIStackView,
+               let icon = stack.arrangedSubviews.first as? UIImageView,
+               let lab = stack.arrangedSubviews.last as? UILabel {
+                icon.tintColor = style.selectedForegroundColor
+                lab.textColor = style.selectedForegroundColor
+                lab.font = style.font
+            }
+        }
+        setNeedsLayout()
+    }
     
     private func createSegmentButtons() {
         segmentButtons = items.enumerated().map { index, item in
@@ -131,13 +182,13 @@ class CustomSegmentView: UIView {
         let iconImageView = UIImageView()
         iconImageView.image = UIImage(systemName: item.icon)
         iconImageView.contentMode = .scaleAspectFit
-        iconImageView.tintColor = .white
+        iconImageView.tintColor = style.normalForegroundColor
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         
         let titleLabel = UILabel()
         titleLabel.text = item.title
-        titleLabel.font = .systemFont(ofSize: 12, weight: .medium)
-        titleLabel.textColor = .white
+        titleLabel.font = style.font
+        titleLabel.textColor = style.normalForegroundColor
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         
@@ -145,7 +196,7 @@ class CustomSegmentView: UIView {
         let stackView = UIStackView(arrangedSubviews: [iconImageView, titleLabel])
         stackView.axis = .vertical
         stackView.alignment = .center
-        stackView.spacing = 4
+        stackView.spacing = style.contentSpacing
         stackView.translatesAutoresizingMaskIntoConstraints = false
         stackView.isUserInteractionEnabled = false
         
@@ -157,8 +208,8 @@ class CustomSegmentView: UIView {
             stackView.centerXAnchor.constraint(equalTo: button.centerXAnchor),
             stackView.centerYAnchor.constraint(equalTo: button.centerYAnchor),
             
-            iconImageView.widthAnchor.constraint(equalToConstant: 20),
-            iconImageView.heightAnchor.constraint(equalToConstant: 20)
+            iconImageView.widthAnchor.constraint(equalToConstant: style.iconSize.width),
+            iconImageView.heightAnchor.constraint(equalToConstant: style.iconSize.height)
         ])
         
         return button
@@ -218,7 +269,7 @@ class CustomSegmentView: UIView {
     }
     
     // MARK: - 布局
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
         updateIndicatorConstraints()
         // 动态同步圆角
@@ -314,6 +365,7 @@ class CustomSegmentView: UIView {
             // 提供选择反馈
             let selectionFeedback = UISelectionFeedbackGenerator()
             selectionFeedback.selectionChanged()
+            sendActions(for: .valueChanged)
         } else {
             // 如果没有变化，动画回到原位置
             updateSelection(animated: true)
@@ -328,6 +380,7 @@ class CustomSegmentView: UIView {
         
         selectedIndex = newIndex
         onSelectionChanged?(selectedIndex, items[selectedIndex])
+        sendActions(for: .valueChanged)
         
         // 提供触觉反馈
         let impactFeedback = UIImpactFeedbackGenerator(style: .light)
@@ -381,8 +434,8 @@ class CustomSegmentView: UIView {
             if let stackView = button.subviews.first as? UIStackView,
                let iconImageView = stackView.arrangedSubviews.first as? UIImageView,
                let titleLabel = stackView.arrangedSubviews.last as? UILabel {
-                iconImageView.tintColor = .white
-                titleLabel.textColor = .white
+                iconImageView.tintColor = style.normalForegroundColor
+                titleLabel.textColor = style.normalForegroundColor
             }
             if isSelected {
                 button.accessibilityTraits.insert(.selected)
@@ -393,7 +446,7 @@ class CustomSegmentView: UIView {
     }
     
     // MARK: - 公开方法
-    func setSelectedIndex(_ index: Int, animated: Bool = true) {
+    public func setSelectedIndex(_ index: Int, animated: Bool = true) {
         guard index >= 0, index < items.count, index != selectedIndex else { return }
         selectedIndex = index
         if animated {
@@ -401,7 +454,10 @@ class CustomSegmentView: UIView {
         }
     }
     
-    func updateItems(_ newItems: [SegmentItem]) {
+    /// 更新 items，尽量保持原选中（按 id 匹配），否则退回 0
+    public func updateItems(_ newItems: [SegmentItem]) {
+        // 记录旧选中 id
+        let oldSelectedId = items.indices.contains(selectedIndex) ? items[selectedIndex].id : nil
         items = newItems
         
         // 清除旧的按钮
@@ -453,9 +509,14 @@ class CustomSegmentView: UIView {
             selectedStackView.bottomAnchor.constraint(equalTo: selectedOverlayView.bottomAnchor)
         ])
         
-        // 重置选中状态
-        selectedIndex = 0
+        // 恢复选中（优先 id 匹配）
+        if let currentId = oldSelectedId, let idx = newItems.firstIndex(where: { $0.id == currentId }) {
+            selectedIndex = idx
+        } else {
+            selectedIndex = 0
+        }
         updateSelection(animated: false)
+        applyStyle()
     }
 
     // MARK: - 选中色覆盖层生成
@@ -467,20 +528,20 @@ class CustomSegmentView: UIView {
             let iconImageView = UIImageView()
             iconImageView.image = UIImage(systemName: item.icon)
             iconImageView.contentMode = .scaleAspectFit
-            iconImageView.tintColor = .systemBlue // 与选中色保持一致
+            iconImageView.tintColor = style.selectedForegroundColor
             iconImageView.translatesAutoresizingMaskIntoConstraints = false
             
             let titleLabel = UILabel()
             titleLabel.text = item.title
-            titleLabel.font = .systemFont(ofSize: 12, weight: .medium)
-            titleLabel.textColor = .systemBlue
+            titleLabel.font = style.font
+            titleLabel.textColor = style.selectedForegroundColor
             titleLabel.textAlignment = .center
             titleLabel.translatesAutoresizingMaskIntoConstraints = false
             
             let stackView = UIStackView(arrangedSubviews: [iconImageView, titleLabel])
             stackView.axis = .vertical
             stackView.alignment = .center
-            stackView.spacing = 4
+            stackView.spacing = style.contentSpacing
             stackView.translatesAutoresizingMaskIntoConstraints = false
             stackView.isUserInteractionEnabled = false
             
@@ -488,8 +549,8 @@ class CustomSegmentView: UIView {
             NSLayoutConstraint.activate([
                 stackView.centerXAnchor.constraint(equalTo: container.centerXAnchor),
                 stackView.centerYAnchor.constraint(equalTo: container.centerYAnchor),
-                iconImageView.widthAnchor.constraint(equalToConstant: 20),
-                iconImageView.heightAnchor.constraint(equalToConstant: 20)
+                iconImageView.widthAnchor.constraint(equalToConstant: style.iconSize.width),
+                iconImageView.heightAnchor.constraint(equalToConstant: style.iconSize.height)
             ])
             return container
         }
@@ -527,7 +588,7 @@ class CustomSegmentView: UIView {
 
 // MARK: - UIGestureRecognizerDelegate
 extension CustomSegmentView: UIGestureRecognizerDelegate {
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return false
     }
 }
