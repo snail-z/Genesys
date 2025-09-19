@@ -8,13 +8,13 @@ class CustomSegmentDemoViewController: UIViewController {
     private let contentView = UIView()
     
     // 主要演示组件
-    private var mainSegmentView: CustomSegmentView!
+    private var mainSegmentView: NeonSegmentView!
     private let mainSelectionLabel = UILabel()
     
     // 不同样式的演示组件
-    private var twoSegmentView: CustomSegmentView!
-    private var fourSegmentView: CustomSegmentView!
-    private var fiveSegmentView: CustomSegmentView!
+    private var twoSegmentView: NeonSegmentView!
+    private var fourSegmentView: NeonSegmentView!
+    private var fiveSegmentView: NeonSegmentView!
     
     // 状态标签
     private let twoSegmentLabel = UILabel()
@@ -22,7 +22,7 @@ class CustomSegmentDemoViewController: UIViewController {
     private let fiveSegmentLabel = UILabel()
     
     // 实际应用演示
-    private var contentSegmentView: CustomSegmentView!
+    private var contentSegmentView: NeonSegmentView!
     private let contentDisplayView = UIView()
     private let contentLabel = UILabel()
     
@@ -60,12 +60,12 @@ class CustomSegmentDemoViewController: UIViewController {
     private func setupSegmentViews() {
         // 1. 主要演示 - 模仿设计图样式
         let mainItems = [
-            SegmentItem(title: "Today", icon: "calendar.circle.fill"),
-            SegmentItem(title: "游戏", icon: "gamecontroller.fill"),
-            SegmentItem(title: "App", icon: "square.stack.3d.up.fill")
+            NeonSegmentItem(title: "Today", icon: "calendar.circle.fill"),
+            NeonSegmentItem(title: "游戏", icon: "gamecontroller.fill"),
+            NeonSegmentItem(title: "App", icon: "square.stack.3d.up.fill")
         ]
         
-        mainSegmentView = CustomSegmentView(items: mainItems)
+        mainSegmentView = NeonSegmentView(items: mainItems)
         mainSegmentView.selectedIndex = 2 // 默认选中App
         mainSegmentView.onSelectionChanged = { [weak self] index, item in
             self?.mainSelectionLabel.text = "当前选中：\\(item.title)（索引：\\(index)）"
@@ -80,11 +80,11 @@ class CustomSegmentDemoViewController: UIViewController {
         
         // 2. 两段演示
         let twoItems = [
-            SegmentItem(title: "左侧", icon: "arrow.left.circle.fill"),
-            SegmentItem(title: "右侧", icon: "arrow.right.circle.fill")
+            NeonSegmentItem(title: "左侧", icon: "arrow.left.circle.fill"),
+            NeonSegmentItem(title: "右侧", icon: "arrow.right.circle.fill")
         ]
         
-        twoSegmentView = CustomSegmentView(items: twoItems)
+        twoSegmentView = NeonSegmentView(items: twoItems)
         twoSegmentView.onSelectionChanged = { [weak self] index, item in
             self?.twoSegmentLabel.text = "选择了：\\(item.title)"
             self?.animateSelectionLabel(self?.twoSegmentLabel)
@@ -97,13 +97,13 @@ class CustomSegmentDemoViewController: UIViewController {
         
         // 3. 四段演示
         let fourItems = [
-            SegmentItem(title: "首页", icon: "house.fill"),
-            SegmentItem(title: "搜索", icon: "magnifyingglass"),
-            SegmentItem(title: "收藏", icon: "heart.fill"),
-            SegmentItem(title: "设置", icon: "gear.badge")
+            NeonSegmentItem(title: "首页", icon: "house.fill"),
+            NeonSegmentItem(title: "搜索", icon: "magnifyingglass"),
+            NeonSegmentItem(title: "收藏", icon: "heart.fill"),
+            NeonSegmentItem(title: "设置", icon: "gear.badge")
         ]
         
-        fourSegmentView = CustomSegmentView(items: fourItems)
+        fourSegmentView = NeonSegmentView(items: fourItems)
         fourSegmentView.onSelectionChanged = { [weak self] index, item in
             self?.fourSegmentLabel.text = "导航到：\\(item.title)"
             self?.animateSelectionLabel(self?.fourSegmentLabel)
@@ -116,14 +116,14 @@ class CustomSegmentDemoViewController: UIViewController {
         
         // 4. 五段演示
         let fiveItems = [
-            SegmentItem(title: "全部", icon: "rectangle.grid.1x2.fill"),
-            SegmentItem(title: "图片", icon: "photo.fill"),
-            SegmentItem(title: "视频", icon: "video.fill"),
-            SegmentItem(title: "音频", icon: "music.note"),
-            SegmentItem(title: "文档", icon: "doc.fill")
+            NeonSegmentItem(title: "全部", icon: "rectangle.grid.1x2.fill"),
+            NeonSegmentItem(title: "图片", icon: "photo.fill"),
+            NeonSegmentItem(title: "视频", icon: "video.fill"),
+            NeonSegmentItem(title: "音频", icon: "music.note"),
+            NeonSegmentItem(title: "文档", icon: "doc.fill")
         ]
         
-        fiveSegmentView = CustomSegmentView(items: fiveItems)
+        fiveSegmentView = NeonSegmentView(items: fiveItems)
         fiveSegmentView.onSelectionChanged = { [weak self] index, item in
             self?.fiveSegmentLabel.text = "筛选：\\(item.title)内容"
             self?.animateSelectionLabel(self?.fiveSegmentLabel)
@@ -136,12 +136,12 @@ class CustomSegmentDemoViewController: UIViewController {
         
         // 5. 内容切换演示
         let contentItems = [
-            SegmentItem(title: "介绍", icon: "info.circle.fill"),
-            SegmentItem(title: "特性", icon: "star.fill"),
-            SegmentItem(title: "使用", icon: "play.circle.fill")
+            NeonSegmentItem(title: "介绍", icon: "info.circle.fill"),
+            NeonSegmentItem(title: "特性", icon: "star.fill"),
+            NeonSegmentItem(title: "使用", icon: "play.circle.fill")
         ]
         
-        contentSegmentView = CustomSegmentView(items: contentItems)
+        contentSegmentView = NeonSegmentView(items: contentItems)
         contentSegmentView.onSelectionChanged = { [weak self] index, item in
             self?.updateContentDisplay(for: index, item: item)
         }
@@ -297,13 +297,13 @@ class CustomSegmentDemoViewController: UIViewController {
         }
     }
     
-    private func updateContentDisplay(for index: Int, item: SegmentItem) {
+    private func updateContentDisplay(for index: Int, item: NeonSegmentItem) {
         let content: String
         
         switch index {
         case 0: // 介绍
             content = """
-            📱 CustomSegmentView 简介
+            📱 NeonSegmentView 简介
             
             这是一个高度定制化的分段控制器组件，具有以下特点：
             
@@ -343,12 +343,12 @@ class CustomSegmentDemoViewController: UIViewController {
             
             1️⃣ 创建数据模型：
             let items = [
-                SegmentItem(title: "标题", icon: "图标名称"),
+                NeonSegmentItem(title: "标题", icon: "图标名称"),
                 // 更多项目...
             ]
             
             2️⃣ 初始化组件：
-            let segmentView = CustomSegmentView(items: items)
+            let segmentView = NeonSegmentView(items: items)
             
             3️⃣ 设置回调：
             segmentView.onSelectionChanged = { index, item in

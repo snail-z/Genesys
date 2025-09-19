@@ -17,7 +17,15 @@
       "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/Card3DAnimationUtil.swift)",
       "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse /Users/apus/Desktop/源码仓库/Genesys/Genesys/WidgetAddViewCell.swift)",
       "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse /Users/apus/Desktop/源码仓库/Genesys/Genesys/Card3DAnimationUtil.swift)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/NeonSegmentView/NeonSegmentItem.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/NeonSegmentView/NeonSegmentStyle.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/NeonSegmentView/NeonHaptics.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/NeonSegmentView/NeonSegmentItemView.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/NeonSegmentView/NeonSegmentIndicator.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/NeonSegmentView/NeonSegmentAnimator.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/NeonSegmentView/NeonSegmentView.swift)",
+      "Bash(/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/swiftc -parse Genesys/CustomSegmentDemoViewController.swift)"
     ],
     "deny": [],
     "ask": []
